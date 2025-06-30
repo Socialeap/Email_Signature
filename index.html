@@ -7,163 +7,143 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #f0f4f8;
       margin: 0;
-      background: #eef2f5;
-    }
-    .tab-header {
+      padding: 0;
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
       align-items: center;
-      padding: 10px 20px;
-      background: rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
+
     .tabs {
       display: flex;
-      gap: 15px;
+      justify-content: center;
+      margin-top: 20px;
     }
-    .tab {
+
+    .tab-button {
+      background: rgba(255, 255, 255, 0.3);
+      border: none;
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      padding: 10px 20px;
+      margin: 0 5px;
       cursor: pointer;
       font-weight: bold;
-      padding: 6px 12px;
-      border-radius: 10px;
-      background-color: rgba(255, 255, 255, 0.2);
       transition: background 0.3s;
     }
-    .tab.active {
-      background-color: rgba(255, 255, 255, 0.5);
+
+    .tab-button.active {
+      background: rgba(255, 255, 255, 0.6);
     }
-    .preview-btn {
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      backdrop-filter: blur(10px);
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .preview-btn:hover {
-      background: rgba(255, 255, 255, 0.5);
-    }
+
     .form-section {
       display: none;
-      padding: 20px;
-    }
-    .form-section.active {
-      display: block;
-    }
-    .input-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      font-weight: bold;
-    }
-    input {
+      flex-direction: column;
+      max-width: 400px;
       width: 100%;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      margin: 20px auto;
     }
+
+    .form-section.active {
+      display: flex;
+    }
+
+    input {
+      margin-bottom: 10px;
+      padding: 8px;
+      font-size: 14px;
+    }
+
     .preview-container {
       margin: 20px auto;
-      max-width: 600px;
-      padding: 20px;
-      background: white;
+      width: 450px;
+      aspect-ratio: 2.25 / 1;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
       border-radius: 20px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
     }
-    .output-area {
-      margin-top: 30px;
+
+    .glass-button {
+      position: absolute;
+      top: -45px;
+      right: 0;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px 20px;
+      border: none;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .profile-image.round {
+      border-radius: 50%;
+    }
+
+    .profile-image.rounded-box {
+      border-radius: 12px;
+    }
+
+    .signature-content {
       padding: 10px;
-      background: #f4f4f4;
-      border-radius: 6px;
-      white-space: pre-wrap;
-      font-family: monospace;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-
-  <div class="tab-header">
-    <div class="tabs">
-      <div class="tab active" data-tab="info">Info</div>
-      <div class="tab" data-tab="buttons">Buttons</div>
-      <div class="tab" data-tab="socials">Socials</div>
-    </div>
-    <button class="preview-btn" onclick="generateSignature()">Update Preview</button>
+  <div class="tabs">
+    <button class="tab-button active" data-tab="info">Info</button>
+    <button class="tab-button" data-tab="buttons">Buttons</button>
+    <button class="tab-button" data-tab="socials">Socials</button>
+    <button class="glass-button" onclick="copySignature()">Copy HTML</button>
   </div>
 
   <div class="form-section active" id="info">
-    <div class="input-group">
-      <label>Full Name</label>
-      <input type="text" id="name" placeholder="John Doe">
-    </div>
-    <div class="input-group">
-      <label>Title</label>
-      <input type="text" id="title" placeholder="Founder & CEO">
-    </div>
-    <div class="input-group">
-      <label>Company</label>
-      <input type="text" id="company" placeholder="Awesome Company Inc.">
-    </div>
-    <div class="input-group">
-      <label>Phone</label>
-      <input type="text" id="phone" placeholder="(123) 456-7890">
-    </div>
-    <div class="input-group">
-      <label>Website</label>
-      <input type="text" id="website" placeholder="https://yourdomain.com">
-    </div>
-    <div class="input-group">
-      <label>Image URL</label>
-      <input type="text" id="image_url" placeholder="https://example.com/photo.jpg">
-    </div>
+    <input placeholder="Full Name" id="name">
+    <input placeholder="Job Title" id="title">
+    <input placeholder="Company Name" id="company">
+    <input placeholder="Phone Number" id="phone">
+    <input placeholder="Website URL" id="website">
+    <input placeholder="Image URL" id="image_url">
+    <select id="image_shape">
+      <option value="round">Round Image</option>
+      <option value="rounded-box">Rounded Corner Box</option>
+    </select>
   </div>
 
   <div class="form-section" id="buttons">
-    <div class="input-group">
-      <label>Button 1 Text</label>
-      <input type="text" id="cta1_label" placeholder="View Portfolio">
-    </div>
-    <div class="input-group">
-      <label>Button 1 URL</label>
-      <input type="text" id="cta1_url" placeholder="https://portfolio.example.com">
-    </div>
-    <div class="input-group">
-      <label>Button 2 Text</label>
-      <input type="text" id="cta2_label" placeholder="Book a Call">
-    </div>
-    <div class="input-group">
-      <label>Button 2 URL</label>
-      <input type="text" id="cta2_url" placeholder="https://calendly.com/example">
-    </div>
+    <input placeholder="First Button Label" id="cta1_label">
+    <input placeholder="First Button Link" id="cta1_url">
+    <input placeholder="Second Button Label" id="cta2_label">
+    <input placeholder="Second Button Link" id="cta2_url">
+    <input placeholder="Third Button Label" id="cta3_label">
+    <input placeholder="Third Button Link" id="cta3_url">
+    <input placeholder="Fourth Button Label" id="cta4_label">
+    <input placeholder="Fourth Button Link" id="cta4_url">
   </div>
 
   <div class="form-section" id="socials">
-    <div class="input-group">
-      <label>Facebook</label>
-      <input type="text" id="facebook_url" placeholder="https://facebook.com/username">
-    </div>
-    <div class="input-group">
-      <label>LinkedIn</label>
-      <input type="text" id="linkedin_url" placeholder="https://linkedin.com/in/username">
-    </div>
-    <div class="input-group">
-      <label>Instagram</label>
-      <input type="text" id="instagram_url" placeholder="https://instagram.com/username">
-    </div>
+    <input placeholder="Facebook URL" id="facebook_url">
+    <input placeholder="LinkedIn URL" id="linkedin_url">
+    <input placeholder="Instagram URL" id="instagram_url">
   </div>
 
   <div class="preview-container" id="signature-preview">
-    <!-- signature HTML is injected here -->
+    <div class="signature-content" id="signature-output">
+      <!-- Rendered signature will appear here -->
+    </div>
   </div>
 
   <script>
-    const tabs = document.querySelectorAll('.tab');
+    const tabs = document.querySelectorAll('.tab-button');
     const sections = document.querySelectorAll('.form-section');
 
     tabs.forEach(tab => {
@@ -175,47 +155,64 @@
       });
     });
 
-    function generateSignature() {
+    function copySignature() {
+      const sig = document.getElementById('signature-output').innerHTML;
+      navigator.clipboard.writeText(sig).then(() => alert('Signature copied to clipboard!'));
+    }
+
+    document.querySelectorAll('input, select').forEach(el => {
+      el.addEventListener('input', updatePreview);
+      el.addEventListener('change', updatePreview);
+    });
+
+    function updatePreview() {
       const name = document.getElementById('name').value;
       const title = document.getElementById('title').value;
       const company = document.getElementById('company').value;
       const phone = document.getElementById('phone').value;
       const website = document.getElementById('website').value;
       const image = document.getElementById('image_url').value;
-      const cta1_label = document.getElementById('cta1_label').value;
-      const cta1_url = document.getElementById('cta1_url').value;
-      const cta2_label = document.getElementById('cta2_label').value;
-      const cta2_url = document.getElementById('cta2_url').value;
+      const shape = document.getElementById('image_shape').value;
+
+      const cta1 = { label: document.getElementById('cta1_label').value, url: document.getElementById('cta1_url').value };
+      const cta2 = { label: document.getElementById('cta2_label').value, url: document.getElementById('cta2_url').value };
+      const cta3 = { label: document.getElementById('cta3_label').value, url: document.getElementById('cta3_url').value };
+      const cta4 = { label: document.getElementById('cta4_label').value, url: document.getElementById('cta4_url').value };
+
       const facebook = document.getElementById('facebook_url').value;
       const linkedin = document.getElementById('linkedin_url').value;
       const instagram = document.getElementById('instagram_url').value;
 
+      const profileClass = shape === 'round' ? 'round' : 'rounded-box';
+
       const html = `
-        <table cellpadding="0" cellspacing="0" border="0">
+        <table style="width:100%; border-spacing:0;">
           <tr>
-            <td>
-              <img src="${image}" width="80" style="border-radius:10px;">
+            <td style="width:100px; text-align:center;">
+              <img src="${image}" width="80" height="80" class="profile-image ${profileClass}" style="object-fit:cover;">
             </td>
             <td style="padding-left:12px;">
-              <strong style="font-size:14px; color:#333;">${name}</strong><br>
-              ${title} – ${company}<br>
-              <a href="tel:${phone}" style="color:#1a0dab;">${phone}</a><br>
-              <a href="${website}" style="color:#1a0dab;">${website}</a>
+              <div style="font-weight:bold; color:#195070;">${name}</div>
+              <div>${title}</div>
+              <div>${company}</div>
+              <div><a href="tel:${phone}" style="color:#1e0f8a;text-decoration:none;">${phone}</a></div>
+              <div><a href="${website}" style="color:#195070;text-decoration:none;">${website}</a></div>
             </td>
           </tr>
-          <tr><td colspan="2" style="padding-top:12px;">
-            <a href="${cta1_url}" style="background:#6e44ff;color:#fff;padding:8px 16px;border-radius:12px;margin-right:8px;text-decoration:none;">${cta1_label}</a>
-            <a href="${cta2_url}" style="background:#03a9f4;color:#fff;padding:8px 16px;border-radius:12px;text-decoration:none;">${cta2_label}</a>
-          </td></tr>
-          <tr><td colspan="2" style="padding-top:10px;">
-            <a href="${facebook}" style="margin-right:10px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" width="20"></a>
-            <a href="${linkedin}" style="margin-right:10px;"><img src="https://cdn-icons-png.flaticon.com/512/145/145807.png" width="20"></a>
-            <a href="${instagram}"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" width="20"></a>
-          </td></tr>
         </table>
-      `;
+        <div style="margin-top:12px; text-align:center;">
+          ${cta1.label ? `<a href="${cta1.url}" style="background:#6e44ff; color:#fff; padding:8px 16px; border-radius:8px; text-decoration:none; margin:4px;">${cta1.label}</a>` : ''}
+          ${cta2.label ? `<a href="${cta2.url}" style="background:#9c27b0; color:#fff; padding:8px 16px; border-radius:8px; text-decoration:none; margin:4px;">${cta2.label}</a>` : ''}
+          ${cta3.label ? `<a href="${cta3.url}" style="background:#5c6bc0; color:#fff; padding:8px 16px; border-radius:8px; text-decoration:none; margin:4px;">${cta3.label}</a>` : ''}
+          ${cta4.label ? `<a href="${cta4.url}" style="background:#0097c7; color:#fff; padding:8px 16px; border-radius:8px; text-decoration:none; margin:4px;">${cta4.label}</a>` : ''}
+        </div>
+        <div style="margin-top:10px; text-align:center;">
+          ${facebook ? `<a href="${facebook}" style="margin:0 8px;"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png" width="24" height="24"></a>` : ''}
+          ${linkedin ? `<a href="${linkedin}" style="margin:0 8px;"><img src="https://cdn-icons-png.flaticon.com/512/145/145807.png" width="24" height="24"></a>` : ''}
+          ${instagram ? `<a href="${instagram}" style="margin:0 8px;"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" width="24" height="24"></a>` : ''}
+        </div>`;
 
-      document.getElementById('signature-preview').innerHTML = html;
+      document.getElementById('signature-output').innerHTML = html;
     }
   </script>
 </body>
