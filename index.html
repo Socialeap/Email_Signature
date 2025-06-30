@@ -32,8 +32,30 @@
       border: 1px solid #ccc;
       border-radius: 6px;
     }
+    .tab-header {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 1rem;
+    }
+    .tab-header button {
+      background: #ddd;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .tab-header button.active {
+      background: #bbb;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
     .signature-preview {
-      width: 520px;
+      width: 540px;
+      height: 250px;
       padding: 20px;
       border-radius: 20px;
       background-image: url('https://static.wixstatic.com/media/c3283f_14ca3ccb9be34f83a2ccfc500563f088~mv2.jpg');
@@ -74,26 +96,35 @@
   <h2>Custom Signature Builder</h2>
   <div class="builder-container">
     <div class="form-panel">
-      <input type="text" id="name" placeholder="Full Name">
-      <input type="text" id="title" placeholder="Title">
-      <input type="text" id="company" placeholder="Company">
-      <input type="text" id="phone" placeholder="Phone">
-      <input type="text" id="website" placeholder="Website URL">
-      <input type="text" id="imgUrl" placeholder="Profile Image URL">
-      <hr>
-      <input type="text" id="cta1" placeholder="CTA 1 Text">
-      <input type="text" id="url1" placeholder="CTA 1 URL">
-      <input type="text" id="cta2" placeholder="CTA 2 Text">
-      <input type="text" id="url2" placeholder="CTA 2 URL">
-      <input type="text" id="cta3" placeholder="CTA 3 Text">
-      <input type="text" id="url3" placeholder="CTA 3 URL">
-      <input type="text" id="cta4" placeholder="CTA 4 Text">
-      <input type="text" id="url4" placeholder="CTA 4 URL">
-      <hr>
-      <input type="text" id="fb" placeholder="Facebook URL">
-      <input type="text" id="li" placeholder="LinkedIn URL">
-      <input type="text" id="ig" placeholder="Instagram URL">
-      <button onclick="updatePreview()">Update Preview</button>
+      <div class="tab-header">
+        <button class="tab-button active" data-tab="info">Info</button>
+        <button class="tab-button" data-tab="buttons">Buttons</button>
+        <button class="tab-button" data-tab="socials">Socials</button>
+      </div>
+      <div class="tab-content active" id="tab-info">
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="text" id="title" placeholder="Your Title (e.g. CEO, Manager)">
+        <input type="text" id="company" placeholder="Company Name">
+        <input type="text" id="phone" placeholder="Phone Number">
+        <input type="text" id="website" placeholder="Website URL">
+        <input type="text" id="imgUrl" placeholder="Profile Image URL">
+      </div>
+      <div class="tab-content" id="tab-buttons">
+        <input type="text" id="cta1" placeholder="Button 1 Text (e.g. Book a Call)">
+        <input type="text" id="url1" placeholder="Button 1 Link URL">
+        <input type="text" id="cta2" placeholder="Button 2 Text (e.g. Visit Portfolio)">
+        <input type="text" id="url2" placeholder="Button 2 Link URL">
+        <input type="text" id="cta3" placeholder="Button 3 Text (e.g. Services)">
+        <input type="text" id="url3" placeholder="Button 3 Link URL">
+        <input type="text" id="cta4" placeholder="Button 4 Text (e.g. Contact Us)">
+        <input type="text" id="url4" placeholder="Button 4 Link URL">
+      </div>
+      <div class="tab-content" id="tab-socials">
+        <input type="text" id="fb" placeholder="Facebook Profile URL">
+        <input type="text" id="li" placeholder="LinkedIn Profile URL">
+        <input type="text" id="ig" placeholder="Instagram Profile URL">
+        <button onclick="updatePreview()">Update Preview</button>
+      </div>
     </div>
 
     <div class="signature-preview" id="signature">
@@ -146,6 +177,18 @@
       document.getElementById("li-link").href = document.getElementById("li").value;
       document.getElementById("ig-link").href = document.getElementById("ig").value;
     }
+
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        const tab = button.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(tabContent => {
+          tabContent.classList.remove('active');
+        });
+        document.getElementById(`tab-${tab}`).classList.add('active');
+      });
+    });
   </script>
 </body>
 </html>
