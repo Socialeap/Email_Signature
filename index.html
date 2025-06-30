@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signature Builder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .builder-container {
+      display: flex;
+      gap: 3rem;
+    }
+    .form-panel {
+      width: 300px;
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .form-panel input {
+      width: 100%;
+      margin-bottom: 1rem;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .signature-preview {
+      width: 520px;
+      padding: 20px;
+      border-radius: 20px;
+      background-image: url('https://static.wixstatic.com/media/c3283f_14ca3ccb9be34f83a2ccfc500563f088~mv2.jpg');
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+      color: #222;
+      font-size: 13px;
+    }
+    .signature-preview a {
+      color: #195070;
+      text-decoration: none;
+    }
+    .sig-buttons a {
+      display: inline-block;
+      background: #6e44ff;
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+      padding: 10px 20px;
+      border-radius: 20px;
+      margin: 6px;
+      font-size: 12px;
+      width: 200px;
+    }
+    .sig-buttons a:hover {
+      opacity: 0.85;
+    }
+    .socials img {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      margin: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Custom Signature Builder</h2>
+  <div class="builder-container">
+    <div class="form-panel">
+      <input type="text" id="name" placeholder="Full Name">
+      <input type="text" id="title" placeholder="Title">
+      <input type="text" id="company" placeholder="Company">
+      <input type="text" id="phone" placeholder="Phone">
+      <input type="text" id="website" placeholder="Website URL">
+      <input type="text" id="imgUrl" placeholder="Profile Image URL">
+      <hr>
+      <input type="text" id="cta1" placeholder="CTA 1 Text">
+      <input type="text" id="url1" placeholder="CTA 1 URL">
+      <input type="text" id="cta2" placeholder="CTA 2 Text">
+      <input type="text" id="url2" placeholder="CTA 2 URL">
+      <input type="text" id="cta3" placeholder="CTA 3 Text">
+      <input type="text" id="url3" placeholder="CTA 3 URL">
+      <input type="text" id="cta4" placeholder="CTA 4 Text">
+      <input type="text" id="url4" placeholder="CTA 4 URL">
+      <hr>
+      <input type="text" id="fb" placeholder="Facebook URL">
+      <input type="text" id="li" placeholder="LinkedIn URL">
+      <input type="text" id="ig" placeholder="Instagram URL">
+      <button onclick="updatePreview()">Update Preview</button>
+    </div>
+
+    <div class="signature-preview" id="signature">
+      <table cellpadding="0" cellspacing="0">
+        <tr>
+          <td><img id="sig-img" src="" width="105" height="105" style="border-radius: 12px;"></td>
+          <td style="padding-left: 16px;">
+            <div id="sig-name" style="font-weight:bold; color:#195070;"></div>
+            <div id="sig-title"></div>
+            <div id="sig-company"></div>
+            <div id="sig-phone"></div>
+            <div><a id="sig-site" href="#" target="_blank"></a></div>
+          </td>
+        </tr>
+      </table>
+      <div class="sig-buttons">
+        <a id="btn1" href="#" target="_blank"></a>
+        <a id="btn2" href="#" target="_blank"></a><br>
+        <a id="btn3" href="#" target="_blank"></a>
+        <a id="btn4" href="#" target="_blank"></a>
+      </div>
+      <div class="socials" style="margin-top: 10px; text-align: center;">
+        <a id="fb-link" href="#" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/124/124010.png"></a>
+        <a id="li-link" href="#" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/145/145807.png"></a>
+        <a id="ig-link" href="#" target="_blank"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"></a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updatePreview() {
+      document.getElementById("sig-name").innerText = document.getElementById("name").value;
+      document.getElementById("sig-title").innerText = document.getElementById("title").value;
+      document.getElementById("sig-company").innerText = document.getElementById("company").value;
+      document.getElementById("sig-phone").innerText = document.getElementById("phone").value;
+      document.getElementById("sig-site").innerText = document.getElementById("website").value;
+      document.getElementById("sig-site").href = document.getElementById("website").value;
+      document.getElementById("sig-img").src = document.getElementById("imgUrl").value;
+
+      document.getElementById("btn1").innerText = document.getElementById("cta1").value;
+      document.getElementById("btn1").href = document.getElementById("url1").value;
+      document.getElementById("btn2").innerText = document.getElementById("cta2").value;
+      document.getElementById("btn2").href = document.getElementById("url2").value;
+      document.getElementById("btn3").innerText = document.getElementById("cta3").value;
+      document.getElementById("btn3").href = document.getElementById("url3").value;
+      document.getElementById("btn4").innerText = document.getElementById("cta4").value;
+      document.getElementById("btn4").href = document.getElementById("url4").value;
+
+      document.getElementById("fb-link").href = document.getElementById("fb").value;
+      document.getElementById("li-link").href = document.getElementById("li").value;
+      document.getElementById("ig-link").href = document.getElementById("ig").value;
+    }
+  </script>
+</body>
+</html>
