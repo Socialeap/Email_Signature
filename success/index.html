@@ -172,21 +172,33 @@
       successState.style.display = 'block';
 
       // Copy rendered HTML
-      copyBtn.addEventListener('click', () => {
-        const htmlToCopy = previewPane.innerHTML.trim();
-        navigator.clipboard.writeText(htmlToCopy)
-          .then(() => {
-            copySuccessMsg.classList.remove('opacity-0');
-            copyBtn.textContent = 'Copied!';
-            copyBtn.classList.replace('bg-indigo-600','bg-green-600');
-            setTimeout(() => {
-              copySuccessMsg.classList.add('opacity-0');
-              copyBtn.textContent = 'Copy Signature';
-              copyBtn.classList.replace('bg-green-600','bg-indigo-600');
-            }, 2000);
-          })
-          .catch(err => console.error('Copy failed', err));
-      });
+     copyBtn.addEventListener('click', () => {
+  // 1. Select the rendered nodes inside previewPane
+  const range = document.createRange();
+  range.selectNodeContents(previewPane);
+
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  // 2. Copy the selection (execCommand copies rich/text HTML)
+  if (document.execCommand('copy')) {
+    // success feedback
+    copySuccessMsg.classList.remove('opacity-0');
+    copyBtn.textContent = 'Copied!';
+    copyBtn.classList.replace('bg-indigo-600','bg-green-600');
+    setTimeout(() => {
+      copySuccessMsg.classList.add('opacity-0');
+      copyBtn.textContent = 'Copy Signature';
+      copyBtn.classList.replace('bg-green-600','bg-indigo-600');
+    }, 2000);
+  } else {
+    console.error('Copy command failed');
+  }
+
+  // 3. Deselect
+  sel.removeAllRanges();
+});
 
     } catch (err) {
       console.error(err);
