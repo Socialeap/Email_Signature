@@ -1,4 +1,5 @@
-const { getStore } = require("@netlify/blobs");
+const fs = require('fs');
+const path = require('path');
 
 exports.handler = async function(event) {
     if (event.httpMethod !== 'POST') {
@@ -7,7 +8,7 @@ exports.handler = async function(event) {
 
     try {
         const formData = new URLSearchParams(event.body);
-        const encodedData = formData.get('data'); 
+        const encodedData = formData.get('data');
         const submissionID = formData.get('submissionID');
 
         if (!encodedData || !submissionID) {
@@ -16,15 +17,10 @@ exports.handler = async function(event) {
 
         const decodedJsonString = Buffer.from(encodedData, 'base64').toString('utf8');
         const signatureData = JSON.parse(decodedJsonString);
-        
         const finalHtml = generateFinalSignature(signatureData);
 
-        const signatureStore = getStore("signatures", {
-  siteID: process.env.NETLIFY_SITE_ID,
-  token: process.env.NETLIFY_AUTH_TOKEN
-});
-        
-        await signatureStore.set(submissionID, finalHtml);
+        const filePath = path.join(__dirname, `../public/signatures/${submissionID}.html`);
+        fs.writeFileSync(filePath, finalHtml, 'utf8');
 
         return {
             statusCode: 200,
@@ -32,44 +28,9 @@ exports.handler = async function(event) {
         };
 
     } catch (error) {
-        console.error('FATAL ERROR in webhook function:', error);
+        console.error('Webhook Error:', error);
         return { statusCode: 500, body: `Server Error: ${error.message}` };
     }
 };
 
-function generateFinalSignature(data) {
-    const { info, buttons, socials } = data;
-    const socialIcons = {
-        'Facebook': 'https://img.icons8.com/fluency/48/000000/facebook-new.png',
-        'LinkedIn': 'https://img.icons8.com/fluency/48/000000/linkedin.png',
-        'Instagram': 'https://img.icons8.com/fluency/48/000000/instagram-new.png',
-        'X/Twitter': 'https://img.icons8.com/ios-filled/50/000000/twitterx.png',
-        'TikTok': 'https://img.icons8.com/color/48/000000/tiktok--v1.png',
-        'Threads': 'https://img.icons8.com/fluency/48/000000/threads.png',
-        'Bluesky': 'https://seeklogo.com/images/B/bluesky-logo-1913610691-seeklogo.com.png'
-    };
-    const phoneLink = (info.phone || '').replace(/[^\d]/g, '');
-    const websiteLink = (info.website || '').startsWith('http') ? info.website : `https://${info.website}`;
-    let buttonsHtml = '';
-    if (buttons && buttons.length > 0) {
-        buttonsHtml = '<tr><td colspan="2" style="padding-top: 12px;"><table border="0" cellpadding="0" cellspacing="0"><tr>';
-        buttons.forEach(btn => {
-            if (btn.label && btn.url) {
-                buttonsHtml += `<td style="padding-right: 8px;"><a href="${btn.url}" target="_blank" style="display:block; padding: 6px 12px; background-color: ${btn.color}; color: #ffffff; text-decoration: none; border-radius: 18px; font-weight: bold; font-size: 12px; text-align: center; font-family: Arial, sans-serif; white-space: nowrap;">${btn.label}</a></td>`;
-            }
-        });
-        buttonsHtml += '</tr></table></td></tr>';
-    }
-    let socialsHtml = '';
-    if (socials && socials.length > 0) {
-        socialsHtml = '<tr><td colspan="2" style="padding-top: 10px;"><table border="0" cellpadding="0" cellspacing="0"><tr>';
-        const socialImgStyle = "border:0; border-radius:6px; display:block;";
-        socials.forEach(social => {
-            if (social.url && socialIcons[social.network]) {
-                socialsHtml += `<td style="padding-right: 8px;"><a href="${social.url}" target="_blank"><img src="${socialIcons[social.network]}" width="24" height="24" alt="${social.network}" style="${socialImgStyle}"></a></td>`;
-            }
-        });
-        socialsHtml += '</tr></table></td></tr>';
-    }
-    return `<table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, sans-serif; color: #333333; width: 500px;"><tr><td style="padding-right: 16px; vertical-align: top; width: 90px; height: 90px; font-size: 0px; line-height: 0px;"><img src="${info.image_url}" alt="Profile" style="display: block; width: 90px; height: 90px; object-fit: cover; ${info.image_style}"></td><td style="vertical-align: top; padding-top: 5px;"><div style="font-size: 18px; font-weight: bold; color: #195070; line-height: 1.2;">${info.name}</div><div style="font-size: 14px; color: #555555; line-height: 1.3; margin-top:2px;">${info.title} | ${info.company}</div><div style="margin-top: 8px; line-height: 1.4;">${info.phone ? `<div style="font-size: 13px;"><a href="tel:${phoneLink}" style="color: #195070; text-decoration: none;">${info.phone}</a></div>` : ''}${info.website ? `<div style="font-size: 13px;"><a href="${websiteLink}" target="_blank" style="color: #195070; text-decoration: none;">${info.website}</a></div>` : ''}</div></td></tr>${buttonsHtml}${socialsHtml}</table>`;
-}
+// Use your existing generateFinalSignature() function
