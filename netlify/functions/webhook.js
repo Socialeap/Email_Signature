@@ -1,10 +1,7 @@
-import { getStore } from "@netlify/blobs";
+const { getStore } = require("@netlify/blobs");
 
-export async function handler(event) {
-    console.log("Webhook function invoked.");
-
+exports.handler = async function(event) {
     if (event.httpMethod !== 'POST') {
-        console.log("Method not allowed:", event.httpMethod);
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
@@ -13,10 +10,7 @@ export async function handler(event) {
         const encodedData = formData.get('data'); 
         const submissionID = formData.get('submissionID');
 
-        console.log("Received submissionID:", submissionID);
-
         if (!encodedData || !submissionID) {
-            console.error("Missing data or submissionID.");
             return { statusCode: 400, body: 'Missing data or submissionID.' };
         }
 
@@ -25,12 +19,9 @@ export async function handler(event) {
         
         const finalHtml = generateFinalSignature(signatureData);
 
-        console.log("Attempting to get blob store 'signatures'.");
         const signatureStore = getStore("signatures");
-        console.log("Blob store retrieved. Attempting to set data for key:", submissionID);
         
         await signatureStore.set(submissionID, finalHtml);
-        console.log("Successfully saved signature for submissionID:", submissionID);
 
         return {
             statusCode: 200,
@@ -41,9 +32,8 @@ export async function handler(event) {
         console.error('FATAL ERROR in webhook function:', error);
         return { statusCode: 500, body: `Server Error: ${error.message}` };
     }
-}
+};
 
-// This helper function generates the final, clean HTML
 function generateFinalSignature(data) {
     const { info, buttons, socials } = data;
     const socialIcons = {
@@ -55,10 +45,8 @@ function generateFinalSignature(data) {
         'Threads': 'https://img.icons8.com/fluency/48/000000/threads.png',
         'Bluesky': 'https://seeklogo.com/images/B/bluesky-logo-1913610691-seeklogo.com.png'
     };
-
     const phoneLink = (info.phone || '').replace(/[^\d]/g, '');
     const websiteLink = (info.website || '').startsWith('http') ? info.website : `https://${info.website}`;
-
     let buttonsHtml = '';
     if (buttons && buttons.length > 0) {
         buttonsHtml = '<tr><td colspan="2" style="padding-top: 12px;"><table border="0" cellpadding="0" cellspacing="0"><tr>';
@@ -69,7 +57,6 @@ function generateFinalSignature(data) {
         });
         buttonsHtml += '</tr></table></td></tr>';
     }
-
     let socialsHtml = '';
     if (socials && socials.length > 0) {
         socialsHtml = '<tr><td colspan="2" style="padding-top: 10px;"><table border="0" cellpadding="0" cellspacing="0"><tr>';
@@ -81,23 +68,5 @@ function generateFinalSignature(data) {
         });
         socialsHtml += '</tr></table></td></tr>';
     }
-
-    return `
-        <table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, sans-serif; color: #333333; width: 500px;">
-            <tr>
-                <td style="padding-right: 16px; vertical-align: top; width: 90px; height: 90px; font-size: 0px; line-height: 0px;">
-                    <img src="${info.image_url}" alt="Profile" style="display: block; width: 90px; height: 90px; object-fit: cover; ${info.image_style}">
-                </td>
-                <td style="vertical-align: top; padding-top: 5px;">
-                    <div style="font-size: 18px; font-weight: bold; color: #195070; line-height: 1.2;">${info.name}</div>
-                    <div style="font-size: 14px; color: #555555; line-height: 1.3; margin-top:2px;">${info.title} | ${info.company}</div>
-                    <div style="margin-top: 8px; line-height: 1.4;">
-                        ${info.phone ? `<div style="font-size: 13px;"><a href="tel:${phoneLink}" style="color: #195070; text-decoration: none;">${info.phone}</a></div>` : ''}
-                        ${info.website ? `<div style="font-size: 13px;"><a href="${websiteLink}" target="_blank" style="color: #195070; text-decoration: none;">${info.website}</a></div>` : ''}
-                    </div>
-                </td>
-            </tr>
-            ${buttonsHtml}
-            ${socialsHtml}
-        </table>`;
+    return `<table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, sans-serif; color: #333333; width: 500px;"><tr><td style="padding-right: 16px; vertical-align: top; width: 90px; height: 90px; font-size: 0px; line-height: 0px;"><img src="${info.image_url}" alt="Profile" style="display: block; width: 90px; height: 90px; object-fit: cover; ${info.image_style}"></td><td style="vertical-align: top; padding-top: 5px;"><div style="font-size: 18px; font-weight: bold; color: #195070; line-height: 1.2;">${info.name}</div><div style="font-size: 14px; color: #555555; line-height: 1.3; margin-top:2px;">${info.title} | ${info.company}</div><div style="margin-top: 8px; line-height: 1.4;">${info.phone ? `<div style="font-size: 13px;"><a href="tel:${phoneLink}" style="color: #195070; text-decoration: none;">${info.phone}</a></div>` : ''}${info.website ? `<div style="font-size: 13px;"><a href="${websiteLink}" target="_blank" style="color: #195070; text-decoration: none;">${info.website}</a></div>` : ''}</div></td></tr>${buttonsHtml}${socialsHtml}</table>`;
 }
