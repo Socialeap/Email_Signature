@@ -1,19 +1,22 @@
-// This is a Node.js serverless function for Netlify.
-// It saves the generated signature to Netlify Blobs after a Jotform payment.
-
 import { getStore } from "@netlify/blobs";
 
 export async function handler(event) {
+    console.log("Webhook function invoked.");
+
     if (event.httpMethod !== 'POST') {
+        console.log("Method not allowed:", event.httpMethod);
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
     try {
         const formData = new URLSearchParams(event.body);
         const encodedData = formData.get('data'); 
-        const submissionID = formData.get('submissionID'); // Get the unique ID from Jotform
+        const submissionID = formData.get('submissionID');
+
+        console.log("Received submissionID:", submissionID);
 
         if (!encodedData || !submissionID) {
+            console.error("Missing data or submissionID.");
             return { statusCode: 400, body: 'Missing data or submissionID.' };
         }
 
@@ -22,11 +25,12 @@ export async function handler(event) {
         
         const finalHtml = generateFinalSignature(signatureData);
 
-        // Get the blob store
+        console.log("Attempting to get blob store 'signatures'.");
         const signatureStore = getStore("signatures");
+        console.log("Blob store retrieved. Attempting to set data for key:", submissionID);
         
-        // Save the HTML to the store using the submissionID as the key
         await signatureStore.set(submissionID, finalHtml);
+        console.log("Successfully saved signature for submissionID:", submissionID);
 
         return {
             statusCode: 200,
@@ -34,7 +38,7 @@ export async function handler(event) {
         };
 
     } catch (error) {
-        console.error('Error processing webhook:', error);
+        console.error('FATAL ERROR in webhook function:', error);
         return { statusCode: 500, body: `Server Error: ${error.message}` };
     }
 }
