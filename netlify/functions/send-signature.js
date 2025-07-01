@@ -1,5 +1,4 @@
 // netlify/functions/send-signature.js
-const fetch = require('node-fetch');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
