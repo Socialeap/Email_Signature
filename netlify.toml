@@ -1,16 +1,16 @@
 [build]
-  publish    = "."                   # or your actual publish directory
-  functions  = "netlify/functions"
+  # your publish dir, adjust if needed:
+  publish = "."
 
-# 1) First, serve success.html normally
 [[redirects]]
-  from   = "/success.html"
-  to     = "/success.html"
+  # 1️⃣ First match /success (with or without data query)
+  from   = "/success"
+  to     = "/success/index.html"
   status = 200
   force  = true
 
-# 2) Then catch-all for your SPA
 [[redirects]]
+  # 2️⃣ Then your SPA fallback
   from   = "/*"
   to     = "/index.html"
   status = 200
