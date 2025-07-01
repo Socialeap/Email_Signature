@@ -80,7 +80,7 @@
             const fetchSignature = async () => {
                 attempts++;
                 try {
-                    const response = await fetch(`/signatures/${submissionID}.html`);
+                    const response = await fetch(`/.netlify/functions/get-signature?id=${submissionID}`);
                     
                     if (response.ok) {
                         const signatureHtml = await response.text();
