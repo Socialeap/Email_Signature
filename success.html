@@ -1,12 +1,42 @@
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const loadingState = document.getElementById('loading-state');
-        const successState = document.getElementById('success-state');
-        const errorState = document.getElementById('error-state');
-        const previewPane = document.getElementById('preview-pane');
-        const htmlCodeOutput = document.getElementById('html-code-output');
-        const copyBtn = document.getElementById('copy-btn');
-        const copySuccessMsg = document.getElementById('copy-success-msg');
+document.addEventListener('DOMContentLoaded', () => {
+    const loadingState = document.getElementById('loading-state');
+    const successState = document.getElementById('success-state');
+    const errorState = document.getElementById('error-state');
+    const previewPane = document.getElementById('preview-pane');
+    const htmlCodeOutput = document.getElementById('html-code-output');
+    const copyBtn = document.getElementById('copy-btn');
+    const copySuccessMsg = document.getElementById('copy-success-msg');
+
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('data');
+
+    if (!encoded) {
+        loadingState.style.display = 'none';
+        errorState.style.display = 'block';
+        return;
+    }
+
+    try {
+        const decoded = atob(encoded);
+        const parsed = JSON.parse(decoded);
+        const info = parsed.info || {};
+        const buttons = parsed.buttons || [];
+        const socials = parsed.socials || [];
+
+        const phoneLink = (info.phone || '').replace(/[^\d]/g, '');
+        const websiteLink = (info.website || '').startsWith('http') ? info.website : `https://${info.website}`;
+
+        let buttonsHtml = '';
+        if (buttons.length > 0) {
+            buttonsHtml = '<tr><td colspan="2" style="padding-top: 12px;"><table border="0" cellpadding="0" cellspacing="0"><tr>';
+            buttons.forEach(btn => {
+                if (btn.label && btn.url) {
+                    buttonsHtml += `<td style="padding-right: 8px;"><a href="${btn.url}" target="_blank" style="display:block; padding: 6px 12px; background-color: ${btn.color}; color: #ffffff; text-decoration: none; border-radius: 18px; font-weight: bold; font-size: 12px; text-align: center; font-family: Arial, sans-serif; white-space: nowrap;">${btn.label}</a></td>`;
+                }
+            });
+            buttonsHtml += '</tr></table></td></tr>';
+        }
 
         const socialIcons = {
             'Facebook': 'https://img.icons8.com/fluency/48/000000/facebook-new.png',
@@ -18,80 +48,43 @@
             'Bluesky': 'https://seeklogo.com/images/B/bluesky-logo-1913610691-seeklogo.com.png'
         };
 
-        function generateHtmlFromData(data) {
-            const info = data.info;
-            const phoneLink = (info.phone || '').replace(/[^\d]/g, '');
-            const websiteLink = (info.website || '').startsWith('http') ? info.website : `https://${info.website}`;
-
-            let buttonsHtml = '';
-            if (data.buttons?.length) {
-                buttonsHtml += '<tr><td colspan="2" style="padding-top: 12px;"><table border="0" cellpadding="0" cellspacing="0"><tr>';
-                data.buttons.forEach(btn => {
-                    if (btn.label && btn.url) {
-                        buttonsHtml += `<td style="padding-right: 8px;"><a href="${btn.url}" target="_blank" style="display:block; padding: 6px 12px; background-color: ${btn.color}; color: #ffffff; text-decoration: none; border-radius: 18px; font-weight: bold; font-size: 12px; text-align: center; font-family: Arial, sans-serif; white-space: nowrap;">${btn.label}</a></td>`;
-                    }
-                });
-                buttonsHtml += '</tr></table></td></tr>';
-            }
-
-            let socialsHtml = '';
-            if (data.socials?.length) {
-                socialsHtml += '<tr><td colspan="2" style="padding-top: 10px;"><table border="0" cellpadding="0" cellspacing="0"><tr>';
-                data.socials.forEach(social => {
-                    if (social.url && socialIcons[social.network]) {
-                        socialsHtml += `<td style="padding-right: 8px;"><a href="${social.url}" target="_blank"><img src="${socialIcons[social.network]}" width="24" height="24" alt="${social.network}" style="border:0; border-radius:6px; display:block;"></a></td>`;
-                    }
-                });
-                socialsHtml += '</tr></table></td></tr>';
-            }
-
-            return `
-                <table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, sans-serif; color: #333333; width: 100%;">
-                    <tr>
-                        <td style="padding-right: 16px; vertical-align: top; width: 90px; height: 90px; font-size: 0px; line-height: 0px;">
-                            <img src="${info.image_url}" alt="Profile" style="display: block; width: 90px; height: 90px; object-fit: cover; ${info.image_style}">
-                        </td>
-                        <td style="vertical-align: top; padding-top: 5px;">
-                            <div style="font-size: 18px; font-weight: bold; color: #195070; line-height: 1.2;">${info.name}</div>
-                            <div style="font-size: 14px; color: #555555; line-height: 1.3; margin-top:2px;">${info.title} | ${info.company}</div>
-                            <div style="margin-top: 8px; line-height: 1.4;">
-                                ${info.phone ? `<div style="font-size: 13px;"><a href="tel:${phoneLink}" style="color: #195070; text-decoration: none;">${info.phone}</a></div>` : ''}
-                                ${info.website ? `<div style="font-size: 13px;"><a href="${websiteLink}" target="_blank" style="color: #195070; text-decoration: none;">${info.website}</a></div>` : ''}
-                            </div>
-                        </td>
-                    </tr>
-                    ${buttonsHtml}
-                    ${socialsHtml}
-                </table>`;
+        let socialsHtml = '';
+        if (socials.length > 0) {
+            socialsHtml = '<tr><td colspan="2" style="padding-top: 10px;"><table border="0" cellpadding="0" cellspacing="0"><tr>';
+            socials.forEach(social => {
+                const icon = socialIcons[social.network] || '';
+                if (social.url && icon) {
+                    socialsHtml += `<td style="padding-right: 8px;"><a href="${social.url}" target="_blank"><img src="${icon}" width="24" height="24" alt="${social.network}" style="border:0; border-radius:6px; display:block;"></a></td>`;
+                }
+            });
+            socialsHtml += '</tr></table></td></tr>';
         }
 
-        // Begin processing
-        const params = new URLSearchParams(window.location.search);
-        const base64data = params.get('data');
+        const signatureHtml = `
+        <table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, sans-serif; color: #333333; width: 100%;">
+            <tr>
+                <td style="padding-right: 16px; vertical-align: top; width: 90px; height: 90px; font-size: 0px; line-height: 0px;">
+                    <img src="${info.image_url}" alt="Profile" style="display: block; width: 90px; height: 90px; object-fit: cover; ${info.image_style}">
+                </td>
+                <td style="vertical-align: top; padding-top: 5px;">
+                    <div style="font-size: 18px; font-weight: bold; color: #195070; line-height: 1.2;">${info.name}</div>
+                    <div style="font-size: 14px; color: #555555; line-height: 1.3; margin-top:2px;">${info.title} | ${info.company}</div>
+                    <div style="margin-top: 8px; line-height: 1.4;">
+                        ${info.phone ? `<div style="font-size: 13px;"><a href="tel:${phoneLink}" style="color: #195070; text-decoration: none;">${info.phone}</a></div>` : ''}
+                        ${info.website ? `<div style="font-size: 13px;"><a href="${websiteLink}" target="_blank" style="color: #195070; text-decoration: none;">${info.website}</a></div>` : ''}
+                    </div>
+                </td>
+            </tr>
+            ${buttonsHtml}
+            ${socialsHtml}
+        </table>`;
 
-        if (!base64data) {
-            loadingState.style.display = 'none';
-            errorState.style.display = 'block';
-            return;
-        }
+        previewPane.innerHTML = signatureHtml;
+        htmlCodeOutput.value = signatureHtml.trim();
 
-        try {
-            const decodedJson = atob(base64data);
-            const userData = JSON.parse(decodedJson);
+        loadingState.style.display = 'none';
+        successState.style.display = 'block';
 
-            const finalHtml = generateHtmlFromData(userData);
-            previewPane.innerHTML = finalHtml;
-            htmlCodeOutput.value = finalHtml.trim();
-
-            loadingState.style.display = 'none';
-            successState.style.display = 'block';
-        } catch (err) {
-            console.error(err);
-            loadingState.style.display = 'none';
-            errorState.style.display = 'block';
-        }
-
-        // Copy to clipboard
         copyBtn.addEventListener('click', () => {
             htmlCodeOutput.select();
             document.execCommand('copy');
@@ -108,5 +101,10 @@
                 copyBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
             }, 2500);
         });
-    });
+    } catch (err) {
+        console.error(err);
+        loadingState.style.display = 'none';
+        errorState.style.display = 'block';
+    }
+});
 </script>
