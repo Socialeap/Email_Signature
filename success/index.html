@@ -51,141 +51,126 @@
 
   </div>
 
-  <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const loading = document.getElementById('loading');
-    const ready   = document.getElementById('ready');
-    const error   = document.getElementById('error');
-    const preview = document.getElementById('preview-pane');
-    const sendBtn = document.getElementById('send-btn');
-    const sendMsg = document.getElementById('send-msg');
+<!-- Replace the previous <script> block with this one -->
 
-    // 1. Read URL params
-    const params      = new URLSearchParams(window.location.search);
-    const encodedData = params.get('data');
-    const userEmail   = params.get('email');
-    if (!encodedData || !userEmail) {
-      loading.style.display = 'none';
-      error.style.display   = 'block';
-      return;
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const loading = document.getElementById('loading');
+  const ready   = document.getElementById('ready');
+  const error   = document.getElementById('error');
+  const preview = document.getElementById('preview-pane');
+  const sendBtn = document.getElementById('send-btn');
+  const sendMsg = document.getElementById('send-msg');
+
+  const params      = new URLSearchParams(window.location.search);
+  const encodedData = params.get('data');
+  const userEmail   = params.get('email');
+  if (!encodedData || !userEmail) {
+    loading.style.display = 'none';
+    error.style.display   = 'block';
+    return;
+  }
+
+  let signatureHtml = '';
+  try {
+    const { info={}, buttons=[], socials=[] } = JSON.parse(atob(encodedData));
+    const phoneLink   = (info.phone||'').replace(/[^\d]/g,'');
+    const websiteLink = info.website && info.website.startsWith('http')
+                      ? info.website
+                      : `https://${info.website||''}`;
+
+    let btns = '';
+    if (buttons.length) {
+      btns = '<tr><td colspan="2" style="padding-top:12px;"><table><tr>';
+      buttons.forEach(b => {
+        btns += `<td style="padding-right:8px;">
+          <a href="${b.url}" target="_blank" style="padding:6px 12px;background-color:${b.color};color:#fff;text-decoration:none;border-radius:18px;font-weight:bold;font-size:12px;">
+            ${b.label}
+          </a>
+        </td>`;
+      });
+      btns += '</tr></table></td></tr>';
     }
 
-    // 2. Decode & build signature HTML
-    let signatureHtml = '';
-    try {
-      const { info={}, buttons=[], socials=[] } = JSON.parse(atob(encodedData));
-
-      const phoneLink   = (info.phone||'').replace(/[^\d]/g,'');
-      const websiteLink = info.website && info.website.startsWith('http')
-                        ? info.website
-                        : `https://${info.website||''}`;
-
-      // buttons
-      let btns = '';
-      if (buttons.length) {
-        btns = '<tr><td colspan="2" style="padding-top:12px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
-        buttons.forEach(b => {
-          btns += `<td style="padding-right:8px;">
-            <a href="${b.url}" target="_blank"
-               style="display:inline-block;padding:6px 12px;background-color:${b.color};
-                      color:#fff;text-decoration:none;border-radius:18px;
-                      font-weight:bold;font-size:12px;text-align:center;">
-              ${b.label}
+    const icons = {
+      Facebook:    'https://img.icons8.com/fluency/48/000000/facebook-new.png',
+      LinkedIn:    'https://img.icons8.com/fluency/48/000000/linkedin.png',
+      Instagram:   'https://img.icons8.com/fluency/48/000000/instagram-new.png',
+      'X/Twitter': 'https://img.icons8.com/ios-filled/50/000000/twitterx.png'
+    };
+    let socs = '';
+    if (socials.length) {
+      socs = '<tr><td colspan="2" style="padding-top:10px;"><table><tr>';
+      socials.forEach(s => {
+        const icon = icons[s.network];
+        if (s.url && icon) {
+          socs += `<td style="padding-right:8px;">
+            <a href="${s.url}" target="_blank">
+              <img src="${icon}" width="24" height="24" style="border-radius:6px;" />
             </a>
           </td>`;
-        });
-        btns += '</tr></table></td></tr>';
-      }
-
-      // socials
-      const icons = {
-        Facebook:    'https://img.icons8.com/fluency/48/000000/facebook-new.png',
-        LinkedIn:    'https://img.icons8.com/fluency/48/000000/linkedin.png',
-        Instagram:   'https://img.icons8.com/fluency/48/000000/instagram-new.png',
-        'X/Twitter': 'https://img.icons8.com/ios-filled/50/000000/twitterx.png'
-      };
-      let socs = '';
-      if (socials.length) {
-        socs = '<tr><td colspan="2" style="padding-top:10px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
-        socials.forEach(s => {
-          const icon = icons[s.network];
-          if (s.url && icon) {
-            socs += `<td style="padding-right:8px;">
-              <a href="${s.url}" target="_blank">
-                <img src="${icon}" width="24" height="24" alt="${s.network}" style="border:0;border-radius:6px;display:block;"/>
-              </a>
-            </td>`;
-          }
-        });
-        socs += '</tr></table></td></tr>';
-      }
-
-      // final table
-      signatureHtml = `
-        <table cellpadding="0" cellspacing="0" border="0"
-               style="font-family:Arial,sans-serif;color:#333;width:100%;text-align:left;">
-          <tr>
-            <td style="padding-right:16px;vertical-align:top;width:90px;height:90px;">
-              <img src="${info.image_url}" width="90" height="90" alt="Profile"
-                   style="border-radius:50%;display:block;${info.image_style||''}"/>
-            </td>
-            <td style="vertical-align:top;padding-top:5px;">
-              <div style="font-size:18px;font-weight:bold;color:#195070;line-height:1.2;">
-                ${info.name||''}
-              </div>
-              <div style="font-size:14px;color:#555;line-height:1.3;margin-top:2px;">
-                ${info.title||''}${info.company? ' | '+info.company: ''}
-              </div>
-              <div style="margin-top:8px;line-height:1.4;">
-                ${info.phone
-                  ? `<div style="font-size:13px;"><a href="tel:${phoneLink}" style="color:#195070;text-decoration:none;">${info.phone}</a></div>`
-                  : ''}
-                ${info.website
-                  ? `<div style="font-size:13px;"><a href="${websiteLink}" target="_blank" style="color:#195070;text-decoration:none;">${info.website}</a></div>`
-                  : ''}
-              </div>
-            </td>
-          </tr>
-          ${btns}
-          ${socs}
-        </table>`.trim();
-
-      // show preview
-      preview.innerHTML      = signatureHtml;
-      loading.style.display  = 'none';
-      ready.style.display    = 'block';
-    }
-    catch (err) {
-      console.error(err);
-      loading.style.display = 'none';
-      error.style.display   = 'block';
-      return;
-    }
-
-    // 3. Send via Resend on click
-    sendBtn.addEventListener('click', () => {
-      sendBtn.disabled = true;
-      fetch('/.netlify/functions/send-signature', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    email: userEmail,
-    html:  signatureHtml
-  })
-})
-      .then(res => {
-        if (!res.ok) throw new Error(res.statusText);
-        sendMsg.classList.remove('opacity-0');
-      })
-      .catch(err => {
-        console.error('Resend error:', err);
-        alert('Failed to email signature. Please try again.');
-        sendBtn.disabled = false;
+        }
       });
-    });
+      socs += '</tr></table></td></tr>';
+    }
 
+    signatureHtml = `
+      <table style="font-family:Arial,sans-serif;width:100%;">
+        <tr>
+          <td style="padding-right:16px;vertical-align:top;width:90px;">
+            <img src="${info.image_url}" width="90" height="90" style="border-radius:50%;" />
+          </td>
+          <td style="vertical-align:top;padding-top:5px;">
+            <div style="font-size:18px;font-weight:bold;color:#195070;">${info.name||''}</div>
+            <div style="font-size:14px;color:#555;margin-top:2px;">
+              ${info.title||''}${info.company? ' | '+info.company: ''}
+            </div>
+            <div style="margin-top:8px;">
+              ${info.phone ? `<div><a href="tel:${phoneLink}" style="color:#195070;">${info.phone}</a></div>` : ''}
+              ${info.website ? `<div><a href="${websiteLink}" target="_blank" style="color:#195070;">${info.website}</a></div>` : ''}
+            </div>
+          </td>
+        </tr>
+        ${btns}
+        ${socs}
+      </table>
+    `.trim();
+
+    preview.innerHTML      = signatureHtml;
+    loading.style.display  = 'none';
+    ready.style.display    = 'block';
+  }
+  catch (err) {
+    console.error(err);
+    loading.style.display = 'none';
+    error.style.display   = 'block';
+    return;
+  }
+
+  // 📩 Send data to Jotform Webhook
+  sendBtn.addEventListener('click', () => {
+    sendBtn.disabled = true;
+
+    fetch("https://hooks.jotform.com/webhook/251816819332056", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: userEmail,
+        signature_html: signatureHtml
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to send");
+      sendMsg.classList.remove('opacity-0');
+    })
+    .catch(err => {
+      console.error('Webhook error:', err);
+      alert('Failed to send signature. Please try again.');
+      sendBtn.disabled = false;
+    });
   });
-  </script>
+});
+</script>
 
 </body>
 </html>
