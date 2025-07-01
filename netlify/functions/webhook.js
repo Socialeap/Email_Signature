@@ -1,60 +1,41 @@
 // This is a Node.js serverless function for Netlify.
-// It uses Resend to email the final signature after a Jotform payment.
+// It saves the generated signature to Netlify Blobs after a Jotform payment.
 
-import { Resend } from 'resend';
+import { getStore } from "@netlify/blobs";
 
-// The handler function that Netlify will run
 export async function handler(event) {
-    // 1. Check if the request is a POST request from Jotform
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
     try {
-        // Initialize Resend with your API key from Netlify's environment variables
-        const resend = new Resend(process.env.RESEND_API_KEY);
-
-        // 2. Parse the incoming data from Jotform
         const formData = new URLSearchParams(event.body);
         const encodedData = formData.get('data'); 
-        const customerEmail = formData.get('email'); 
+        const submissionID = formData.get('submissionID'); // Get the unique ID from Jotform
 
-        if (!encodedData || !customerEmail) {
-            return { statusCode: 400, body: 'Missing data or email in form submission.' };
+        if (!encodedData || !submissionID) {
+            return { statusCode: 400, body: 'Missing data or submissionID.' };
         }
 
-        // 3. Decode and parse the signature data
         const decodedJsonString = Buffer.from(encodedData, 'base64').toString('utf8');
         const signatureData = JSON.parse(decodedJsonString);
         
-        // 4. Generate the final HTML signature using the received data
         const finalHtml = generateFinalSignature(signatureData);
 
-        // 5. Prepare and send the email to the customer using Resend
-        await resend.emails.send({
-            from: 'Your Name <onboarding@resend.dev>', // Resend's default sending address
-            to: [customerEmail],
-            subject: 'Your Custom Gmail Signature is Ready!',
-            html: `
-                <h1>Thank you for your purchase!</h1>
-                <p>You can now copy the HTML code below and paste it into your Gmail signature settings.</p>
-                <pre style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word;"><code>${escapeHtml(finalHtml)}</code></pre>
-                <p>Thank you,<br>The Signature Team</p>
-            `,
-        });
+        // Get the blob store
+        const signatureStore = getStore("signatures");
+        
+        // Save the HTML to the store using the submissionID as the key
+        await signatureStore.set(submissionID, finalHtml);
 
-        // 6. Return a success response to Jotform
         return {
             statusCode: 200,
-            body: 'Successfully processed payment and sent signature.',
+            body: 'Signature saved successfully.',
         };
 
     } catch (error) {
         console.error('Error processing webhook:', error);
-        return {
-            statusCode: 500,
-            body: `Server Error: ${error.message}`,
-        };
+        return { statusCode: 500, body: `Server Error: ${error.message}` };
     }
 }
 
@@ -116,12 +97,3 @@ function generateFinalSignature(data) {
             ${socialsHtml}
         </table>`;
 }
-
-function escapeHtml(unsafe) {
-    return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
- }
