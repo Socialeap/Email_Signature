@@ -1,10 +1,7 @@
-// This function retrieves a signature from the blob store.
+const { getStore } = require("@netlify/blobs");
 
-import { getStore } from "@netlify/blobs";
-
-export async function handler(event) {
+exports.handler = async function(event) {
     try {
-        // Get the submission ID from the URL query parameter
         const submissionID = event.queryStringParameters.id;
 
         if (!submissionID) {
@@ -27,4 +24,4 @@ export async function handler(event) {
         console.error("Error retrieving signature:", error);
         return { statusCode: 500, body: "Server Error." };
     }
-}
+};
