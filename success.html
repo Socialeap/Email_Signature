@@ -19,7 +19,7 @@
         <!-- Loading State -->
         <div id="loading-state">
             <h1 class="text-2xl font-bold text-gray-800">Finalizing Your Signature...</h1>
-            <p class="text-gray-600 mt-2">Please wait a moment while we prepare your code.</p>
+            <p class="text-gray-600 mt-2">Please wait a moment while we prepare your code. This can take up to 20 seconds.</p>
             <div class="spinner mt-6 border-4 border-gray-300 border-t-4 border-t-indigo-600 rounded-full w-12 h-12 animate-spin mx-auto"></div>
         </div>
 
@@ -55,7 +55,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             const loadingState = document.getElementById('loading-state');
             const successState = document.getElementById('success-state');
             const errorState = document.getElementById('error-state');
@@ -64,7 +64,6 @@
             const copyBtn = document.getElementById('copy-btn');
             const copySuccessMsg = document.getElementById('copy-success-msg');
 
-            // 1. Get the submission ID from the URL
             const params = new URLSearchParams(window.location.search);
             const submissionID = params.get('submissionID');
 
@@ -74,30 +73,44 @@
                 return;
             }
 
-            try {
-                // 2. Fetch the signature from our Netlify function
-                const response = await fetch(`/.netlify/functions/get-signature?id=${submissionID}`);
-                
-                if (!response.ok) {
-                    throw new Error('Signature not found or an error occurred.');
+            let attempts = 0;
+            const maxAttempts = 10;
+            const interval = 2000; // 2 seconds
+
+            const fetchSignature = async () => {
+                attempts++;
+                try {
+                    const response = await fetch(`/.netlify/functions/get-signature?id=${submissionID}`);
+                    
+                    if (response.ok) {
+                        const signatureHtml = await response.text();
+                        previewPane.innerHTML = signatureHtml;
+                        htmlCodeOutput.value = signatureHtml.trim();
+                        
+                        loadingState.style.display = 'none';
+                        successState.style.display = 'block';
+                        return; // Success, stop polling
+                    }
+
+                    if (response.status === 404 && attempts < maxAttempts) {
+                        // Not found yet, try again after a delay
+                        setTimeout(fetchSignature, interval);
+                    } else {
+                        // Either max attempts reached or another error occurred
+                        throw new Error('Failed to retrieve signature.');
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    loadingState.style.display = 'none';
+                    errorState.style.display = 'block';
                 }
+            };
 
-                const signatureHtml = await response.text();
+            // Start the first attempt to fetch the signature
+            fetchSignature();
 
-                // 3. Display the signature and code
-                previewPane.innerHTML = signatureHtml;
-                htmlCodeOutput.value = signatureHtml.trim();
-                
-                loadingState.style.display = 'none';
-                successState.style.display = 'block';
-
-            } catch (error) {
-                console.error(error);
-                loadingState.style.display = 'none';
-                errorState.style.display = 'block';
-            }
-
-            // 4. Handle Copy Button Click
+            // Handle Copy Button Click
             copyBtn.addEventListener('click', () => {
                 htmlCodeOutput.select();
                 document.execCommand('copy');
