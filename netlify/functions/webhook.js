@@ -19,7 +19,10 @@ exports.handler = async function(event) {
         
         const finalHtml = generateFinalSignature(signatureData);
 
-        const signatureStore = getStore("signatures");
+        const signatureStore = getStore("signatures", {
+  siteID: process.env.NETLIFY_SITE_ID,
+  token: process.env.NETLIFY_AUTH_TOKEN
+});
         
         await signatureStore.set(submissionID, finalHtml);
 
