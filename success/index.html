@@ -8,132 +8,125 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-  </style>
+  <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-  <div id="main-container" class="w-full max-w-3xl bg-white p-8 rounded-xl shadow-lg text-center">
+  <div class="w-full max-w-3xl bg-white p-8 rounded-xl shadow-lg text-center">
 
     <!-- Loading -->
-    <div id="loading-state">
-      <h1 class="text-2xl font-bold text-gray-800">Finalizing Your Signature...</h1>
-      <p class="text-gray-600 mt-2">Please wait while we prepare your signature.</p>
+    <div id="loading">
+      <h1 class="text-2xl font-bold text-gray-800">Finalizing Your Signature…</h1>
       <div class="spinner mt-6 border-4 border-gray-300 border-t-4 border-t-indigo-600 rounded-full w-12 h-12 animate-spin mx-auto"></div>
     </div>
 
-    <!-- Success -->
-    <div id="success-state" class="hidden">
+    <!-- Success Preview + Send Button -->
+    <div id="ready" class="hidden">
       <h1 class="text-3xl font-bold text-green-600">Thank You!</h1>
-      <p class="text-gray-700 mt-2">Your email signature is ready below.</p>
+      <p class="text-gray-700 mt-2">We’ll email your signature right away.</p>
 
       <!-- Live Preview -->
       <div class="my-6">
         <h2 class="text-xl font-semibold text-gray-800">Live Preview</h2>
-        <div id="business-card-container" class="bg-gray-50 p-6 rounded-lg shadow-inner mt-2 inline-block">
+        <div class="bg-gray-50 p-6 rounded-lg shadow-inner mt-2 inline-block text-left">
           <div id="preview-pane"></div>
         </div>
       </div>
 
-      <!-- Copy Button -->
-      <div class="my-4">
-        <button id="copy-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-all">
-          Copy Signature
+      <!-- Send Button -->
+      <div class="mt-4">
+        <button id="send-btn"
+                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-all">
+          Send My Signature
         </button>
-        <p id="copy-success-msg" class="text-green-600 font-semibold mt-2 opacity-0 transition-opacity">Copied!</p>
+        <p id="send-msg" class="text-green-600 font-semibold mt-2 opacity-0 transition-opacity">Sent! Check your inbox.</p>
       </div>
     </div>
 
     <!-- Error -->
-    <div id="error-state" class="hidden">
-      <h1 class="text-2xl font-bold text-red-600">Error</h1>
-      <p class="text-gray-600 mt-2">Unable to load your signature. Please check the link or contact support.</p>
+    <div id="error" class="hidden">
+      <h1 class="text-2xl font-bold text-red-600">Oops!</h1>
+      <p class="text-gray-600 mt-2">Something went wrong. Please try again or contact support.</p>
     </div>
 
   </div>
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const loadingState   = document.getElementById('loading-state');
-    const successState   = document.getElementById('success-state');
-    const errorState     = document.getElementById('error-state');
-    const previewPane    = document.getElementById('preview-pane');
-    const copyBtn        = document.getElementById('copy-btn');
-    const copySuccessMsg = document.getElementById('copy-success-msg');
+    const loading = document.getElementById('loading');
+    const ready   = document.getElementById('ready');
+    const error   = document.getElementById('error');
+    const preview = document.getElementById('preview-pane');
+    const sendBtn = document.getElementById('send-btn');
+    const sendMsg = document.getElementById('send-msg');
 
-    // Get the Base64 data
+    // 1. Read URL params
     const params      = new URLSearchParams(window.location.search);
     const encodedData = params.get('data');
-    if (!encodedData) {
-      loadingState.style.display = 'none';
-      errorState.style.display   = 'block';
+    const userEmail   = params.get('email');
+    if (!encodedData || !userEmail) {
+      loading.style.display = 'none';
+      error.style.display   = 'block';
       return;
     }
 
+    // 2. Decode & build signature HTML
+    let signatureHtml = '';
     try {
-      const { info = {}, buttons = [], socials = [] } = JSON.parse(atob(encodedData));
+      const { info={}, buttons=[], socials=[] } = JSON.parse(atob(encodedData));
 
-      // Build phone & website links
-      const phoneLink   = (info.phone || '').replace(/[^\d]/g, '');
+      const phoneLink   = (info.phone||'').replace(/[^\d]/g,'');
       const websiteLink = info.website && info.website.startsWith('http')
                         ? info.website
-                        : `https://${info.website || ''}`;
+                        : `https://${info.website||''}`;
 
-      // Buttons HTML
-      let buttonsHtml = '';
+      // buttons
+      let btns = '';
       if (buttons.length) {
-        buttonsHtml = '<tr><td colspan="2" style="padding-top:12px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
+        btns = '<tr><td colspan="2" style="padding-top:12px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
         buttons.forEach(b => {
-          buttonsHtml += `
-            <td style="padding-right:8px;">
-              <a href="${b.url}" target="_blank"
-                 style="display:inline-block;padding:6px 12px;background-color:${b.color};
-                        color:#fff;text-decoration:none;border-radius:18px;
-                        font-weight:bold;font-size:12px;text-align:center;">
-                ${b.label}
-              </a>
-            </td>`;
+          btns += `<td style="padding-right:8px;">
+            <a href="${b.url}" target="_blank"
+               style="display:inline-block;padding:6px 12px;background-color:${b.color};
+                      color:#fff;text-decoration:none;border-radius:18px;
+                      font-weight:bold;font-size:12px;text-align:center;">
+              ${b.label}
+            </a>
+          </td>`;
         });
-        buttonsHtml += '</tr></table></td></tr>';
+        btns += '</tr></table></td></tr>';
       }
 
-      // Social icons map
+      // socials
       const icons = {
         Facebook:    'https://img.icons8.com/fluency/48/000000/facebook-new.png',
         LinkedIn:    'https://img.icons8.com/fluency/48/000000/linkedin.png',
         Instagram:   'https://img.icons8.com/fluency/48/000000/instagram-new.png',
-        'X/Twitter': 'https://img.icons8.com/ios-filled/50/000000/twitterx.png',
-        TikTok:      'https://img.icons8.com/color/48/000000/tiktok--v1.png',
-        Threads:     'https://img.icons8.com/fluency/48/000000/threads.png',
-        Bluesky:     'https://seeklogo.com/images/B/bluesky-logo-1913610691-seeklogo.com.png'
+        'X/Twitter': 'https://img.icons8.com/ios-filled/50/000000/twitterx.png'
       };
-
-      // Socials HTML
-      let socialsHtml = '';
+      let socs = '';
       if (socials.length) {
-        socialsHtml = '<tr><td colspan="2" style="padding-top:10px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
+        socs = '<tr><td colspan="2" style="padding-top:10px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
         socials.forEach(s => {
           const icon = icons[s.network];
           if (s.url && icon) {
-            socialsHtml += `
-              <td style="padding-right:8px;">
-                <a href="${s.url}" target="_blank">
-                  <img src="${icon}" width="24" height="24" alt="${s.network}"
-                       style="border:0;border-radius:6px;display:block;"/>
-                </a>
-              </td>`;
+            socs += `<td style="padding-right:8px;">
+              <a href="${s.url}" target="_blank">
+                <img src="${icon}" width="24" height="24" alt="${s.network}" style="border:0;border-radius:6px;display:block;"/>
+              </a>
+            </td>`;
           }
         });
-        socialsHtml += '</tr></table></td></tr>';
+        socs += '</tr></table></td></tr>';
       }
 
-      // Final table
-      const signatureHtml = `
-        <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;color:#333;width:100%;text-align:left;">
+      // final table
+      signatureHtml = `
+        <table cellpadding="0" cellspacing="0" border="0"
+               style="font-family:Arial,sans-serif;color:#333;width:100%;text-align:left;">
           <tr>
             <td style="padding-right:16px;vertical-align:top;width:90px;height:90px;">
-              <img src="${info.image_url}" alt="Profile" width="90" height="90"
+              <img src="${info.image_url}" width="90" height="90" alt="Profile"
                    style="border-radius:50%;display:block;${info.image_style||''}"/>
             </td>
             <td style="vertical-align:top;padding-top:5px;">
@@ -145,65 +138,57 @@
               </div>
               <div style="margin-top:8px;line-height:1.4;">
                 ${info.phone
-                  ? `<div style="font-size:13px;">
-                       <a href="tel:${phoneLink}" style="color:#195070;text-decoration:none;">
-                         ${info.phone}
-                       </a>
-                     </div>`
+                  ? `<div style="font-size:13px;"><a href="tel:${phoneLink}" style="color:#195070;text-decoration:none;">${info.phone}</a></div>`
                   : ''}
                 ${info.website
-                  ? `<div style="font-size:13px;">
-                       <a href="${websiteLink}" target="_blank" style="color:#195070;text-decoration:none;">
-                         ${info.website}
-                       </a>
-                     </div>`
+                  ? `<div style="font-size:13px;"><a href="${websiteLink}" target="_blank" style="color:#195070;text-decoration:none;">${info.website}</a></div>`
                   : ''}
               </div>
             </td>
           </tr>
-          ${buttonsHtml}
-          ${socialsHtml}
-        </table>`;
+          ${btns}
+          ${socs}
+        </table>`.trim();
 
-      // Render & show
-      previewPane.innerHTML      = signatureHtml;
-      loadingState.style.display = 'none';
-      successState.style.display = 'block';
-
-      // Copy rendered HTML
-     copyBtn.addEventListener('click', () => {
-  // 1. Select the rendered nodes inside previewPane
-  const range = document.createRange();
-  range.selectNodeContents(previewPane);
-
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(range);
-
-  // 2. Copy the selection (execCommand copies rich/text HTML)
-  if (document.execCommand('copy')) {
-    // success feedback
-    copySuccessMsg.classList.remove('opacity-0');
-    copyBtn.textContent = 'Copied!';
-    copyBtn.classList.replace('bg-indigo-600','bg-green-600');
-    setTimeout(() => {
-      copySuccessMsg.classList.add('opacity-0');
-      copyBtn.textContent = 'Copy Signature';
-      copyBtn.classList.replace('bg-green-600','bg-indigo-600');
-    }, 2000);
-  } else {
-    console.error('Copy command failed');
-  }
-
-  // 3. Deselect
-  sel.removeAllRanges();
-});
-
-    } catch (err) {
-      console.error(err);
-      loadingState.style.display = 'none';
-      errorState.style.display   = 'block';
+      // show preview
+      preview.innerHTML      = signatureHtml;
+      loading.style.display  = 'none';
+      ready.style.display    = 'block';
     }
+    catch (err) {
+      console.error(err);
+      loading.style.display = 'none';
+      error.style.display   = 'block';
+      return;
+    }
+
+    // 3. Send via Resend on click
+    sendBtn.addEventListener('click', () => {
+      sendBtn.disabled = true;
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer re_dx2UKkgq_3F75UZeJrXbgjx9XQK7CV6Zy'
+        },
+        body: JSON.stringify({
+          from: 'YOUR_VERIFIED_SENDER',
+          to: [ userEmail ],
+          subject: 'Your Custom Email Signature',
+          html: signatureHtml
+        })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error(res.statusText);
+        sendMsg.classList.remove('opacity-0');
+      })
+      .catch(err => {
+        console.error('Resend error:', err);
+        alert('Failed to email signature. Please try again.');
+        sendBtn.disabled = false;
+      });
+    });
+
   });
   </script>
 
