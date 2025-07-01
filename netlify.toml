@@ -2,21 +2,17 @@
   publish   = "."
   functions = "netlify/functions"
 
-# 1️⃣ Proxy /api/* → your Netlify functions
 [[redirects]]
-  from      = "/api/*"
-  to        = "/.netlify/functions/:splat"
-  status    = 200
+  from   = "/success"
+  to     = "/success/index.html"
+  status = 200
+  force  = true
 
-# 2️⃣ Serve your success page
 [[redirects]]
-  from      = "/success"
-  to        = "/success/index.html"
-  status    = 200
-  force     = true
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
 
-# 3️⃣ SPA fallback for everything else
-[[redirects]]
-  from      = "/*"
-  to        = "/index.html"
-  status    = 200
+# Install per-function dependencies from each function’s package.json
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
