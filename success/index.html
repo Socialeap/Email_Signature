@@ -1,195 +1,113 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Your Signature Is Ready!</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
   <div class="w-full max-w-3xl bg-white p-8 rounded-xl shadow-lg text-center">
 
-    <!-- Loading -->
     <div id="loading">
       <h1 class="text-2xl font-bold text-gray-800">Finalizing Your Signature…</h1>
       <div class="spinner mt-6 border-4 border-gray-300 border-t-4 border-t-indigo-600 rounded-full w-12 h-12 animate-spin mx-auto"></div>
     </div>
 
-    <!-- Success Preview + Send Button -->
     <div id="ready" class="hidden">
-      <h1 class="text-3xl font-bold text-green-600">Thank You!</h1>
-      <p class="text-gray-700 mt-2">We’ll email your signature right away.</p>
+      <h1 class="text-3xl font-bold text-green-600">Your Signature is Ready!</h1>
+      <p class="text-gray-700 mt-2">Follow the steps below to add it to Gmail.</p>
 
-      <!-- Live Preview -->
       <div class="my-6">
-        <h2 class="text-xl font-semibold text-gray-800">Live Preview</h2>
+        <h2 class="text-xl font-semibold text-gray-800">Final Preview</h2>
         <div class="bg-gray-50 p-6 rounded-lg shadow-inner mt-2 inline-block text-left">
           <div id="preview-pane"></div>
         </div>
       </div>
-
-      <!-- Send Button -->
-      <div class="mt-4">
-        <button id="send-btn"
-                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-all">
-          Send My Signature
-        </button>
-        <p id="send-msg" class="text-green-600 font-semibold mt-2 opacity-0 transition-opacity">Sent! Check your inbox.</p>
+      
+      <div class="text-left max-w-lg mx-auto space-y-4 bg-indigo-50 p-6 rounded-lg">
+        <div>
+            <h3 class="font-bold text-lg text-indigo-700">Step 1: Copy Your Signature</h3>
+            <p class="text-gray-600 text-sm">Click the button below to copy the signature's source code.</p>
+            <button id="copy-btn" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-all">
+              Copy Signature to Clipboard
+            </button>
+            <p id="copy-msg" class="text-green-600 font-semibold mt-2 text-center opacity-0 transition-opacity">Copied!</p>
+        </div>
+        <div>
+            <h3 class="font-bold text-lg text-indigo-700">Step 2: Paste into Gmail</h3>
+            <p class="text-gray-600 text-sm">In Gmail, go to <strong class="text-gray-800">Settings → See all settings</strong>, scroll to the "Signature" section, create a new signature, and paste.</p>
+        </div>
       </div>
     </div>
 
-    <!-- Error -->
     <div id="error" class="hidden">
-      <h1 class="text-2xl font-bold text-red-600">Oops!</h1>
-      <p class="text-gray-600 mt-2">Something went wrong. Please try again or contact support.</p>
+      <h1 class="text-2xl font-bold text-red-600">Oops! Something Went Wrong</h1>
+      <p class="text-gray-600 mt-2">Could not retrieve your signature. Please check your link or contact support.</p>
     </div>
 
   </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const loading = document.getElementById('loading');
   const ready   = document.getElementById('ready');
   const error   = document.getElementById('error');
   const preview = document.getElementById('preview-pane');
-  const sendBtn = document.getElementById('send-btn');
-  const sendMsg = document.getElementById('send-msg');
+  const copyBtn = document.getElementById('copy-btn');
+  const copyMsg = document.getElementById('copy-msg');
 
-  const params      = new URLSearchParams(window.location.search);
-  const encodedData = params.get('data');
-  const userEmail   = params.get('email');
+  const params = new URLSearchParams(window.location.search);
+  const submissionID = params.get('id');
 
-  if (!encodedData || !userEmail) {
+  if (!submissionID) {
     loading.style.display = 'none';
     error.style.display   = 'block';
     return;
   }
 
   let signatureHtml = '';
-  let jotformPayload = { email: userEmail };
 
   try {
-    const { info = {}, buttons = [], socials = [] } = JSON.parse(atob(encodedData));
-
-    const phoneLink   = (info.phone || '').replace(/[^\d]/g, '');
-    const websiteLink = info.website?.startsWith('http')
-                      ? info.website
-                      : `https://${info.website || ''}`;
-
-    // Populate Jotform payload
-    jotformPayload = {
-      ...jotformPayload,
-      name:     info.name     || '',
-      title:    info.title    || '',
-      company:  info.company  || '',
-      phone:    info.phone    || '',
-      website:  info.website  || '',
-      image:    info.image_url || '',
-      buttons:  JSON.stringify(buttons),
-      socials:  JSON.stringify(socials)
-    };
-
-    let btns = '';
-    if (buttons.length) {
-      btns = '<tr><td colspan="2" style="padding-top:12px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
-      buttons.forEach(b => {
-        btns += `<td style="padding-right:8px;">
-          <a href="${b.url}" target="_blank"
-             style="display:inline-block;padding:6px 12px;background-color:${b.color};
-                    color:#fff;text-decoration:none;border-radius:18px;
-                    font-weight:bold;font-size:12px;text-align:center;">
-            ${b.label}
-          </a>
-        </td>`;
-      });
-      btns += '</tr></table></td></tr>';
+    // Fetch the signature HTML from our Netlify function using the ID from the URL
+    const response = await fetch(`/.netlify/functions/get-signature?id=${submissionID}`);
+    if (!response.ok) {
+      throw new Error(`Server responded with status: ${response.status}`);
+    }
+    
+    signatureHtml = await response.text();
+    if (!signatureHtml) {
+      throw new Error('Signature content is empty.');
     }
 
-    const icons = {
-      Facebook:    'https://img.icons8.com/fluency/48/000000/facebook-new.png',
-      LinkedIn:    'https://img.icons8.com/fluency/48/000000/linkedin.png',
-      Instagram:   'https://img.icons8.com/fluency/48/000000/instagram-new.png',
-      'X/Twitter': 'https://img.icons8.com/ios-filled/50/000000/twitterx.png'
-    };
-    let socs = '';
-    if (socials.length) {
-      socs = '<tr><td colspan="2" style="padding-top:10px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
-      socials.forEach(s => {
-        const icon = icons[s.network];
-        if (s.url && icon) {
-          socs += `<td style="padding-right:8px;">
-            <a href="${s.url}" target="_blank">
-              <img src="${icon}" width="24" height="24" alt="${s.network}" style="border:0;border-radius:6px;display:block;"/>
-            </a>
-          </td>`;
-        }
-      });
-      socs += '</tr></table></td></tr>';
-    }
-
-    signatureHtml = `
-      <table cellpadding="0" cellspacing="0" border="0"
-             style="font-family:Arial,sans-serif;color:#333;width:100%;text-align:left;">
-        <tr>
-          <td style="padding-right:16px;vertical-align:top;width:90px;height:90px;">
-            <img src="${info.image_url}" width="90" height="90" alt="Profile"
-                 style="border-radius:50%;display:block;${info.image_style || ''}"/>
-          </td>
-          <td style="vertical-align:top;padding-top:5px;">
-            <div style="font-size:18px;font-weight:bold;color:#195070;line-height:1.2;">
-              ${info.name || ''}
-            </div>
-            <div style="font-size:14px;color:#555;line-height:1.3;margin-top:2px;">
-              ${info.title || ''}${info.company ? ' | ' + info.company : ''}
-            </div>
-            <div style="margin-top:8px;line-height:1.4;">
-              ${info.phone
-                ? `<div style="font-size:13px;"><a href="tel:${phoneLink}" style="color:#195070;text-decoration:none;">${info.phone}</a></div>`
-                : ''}
-              ${info.website
-                ? `<div style="font-size:13px;"><a href="${websiteLink}" target="_blank" style="color:#195070;text-decoration:none;">${info.website}</a></div>`
-                : ''}
-            </div>
-          </td>
-        </tr>
-        ${btns}
-        ${socs}
-      </table>`.trim();
-
-    jotformPayload.signature_html = signatureHtml;
-
-    preview.innerHTML      = signatureHtml;
-    loading.style.display  = 'none';
-    ready.style.display    = 'block';
+    // Display the fetched signature and switch to the 'ready' view
+    preview.innerHTML = signatureHtml;
+    loading.style.display = 'none';
+    ready.style.display   = 'block';
 
   } catch (err) {
-    console.error(err);
+    console.error('Failed to load signature:', err);
     loading.style.display = 'none';
     error.style.display   = 'block';
     return;
   }
 
-  // Submit to Jotform Webhook
-  sendBtn.addEventListener('click', () => {
-    sendBtn.disabled = true;
-    fetch('https://submit.jotform.com/submit/251816819332056/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(jotformPayload)
-    })
-    .then(res => {
-      if (!res.ok) throw new Error(res.statusText);
-      sendMsg.classList.remove('opacity-0');
-    })
-    .catch(err => {
-      console.error('Jotform webhook error:', err);
-      alert('Failed to submit signature. Please try again.');
-      sendBtn.disabled = false;
+  // Set up the copy button to copy the RAW signatureHtml string to the clipboard
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(signatureHtml).then(() => {
+      copyBtn.textContent = 'Copied!';
+      copyMsg.classList.remove('opacity-0');
+      
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy Signature to Clipboard';
+        copyMsg.classList.add('opacity-0');
+      }, 2500);
+    }).catch(err => {
+      console.error('Failed to copy to clipboard:', err);
+      alert('Could not copy signature. Please try copying the content manually from the preview.');
     });
   });
 });
