@@ -1,44 +1,45 @@
 // netlify/functions/send-signature.js
 
+const fetch = require('node-fetch');  // keep this line
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
+    // 1️⃣ pull out the properties we're actually sending
     const { email, html } = JSON.parse(event.body);
+
     if (!email || !html) {
       return { statusCode: 400, body: 'Missing email or html payload.' };
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      return { statusCode: 500, body: 'Server misconfiguration: no API key.' };
-    }
-
+    // 2️⃣ call Resend, using the email variable as the recipient
     const resp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type':  'application/json'
       },
       body: JSON.stringify({
-        from: 'YOUR_VERIFIED_SENDER',  // e.g. "noreply@yourdomain.com"
-        to:   [ email ],
+        from:    'SignatureBot <noreply@emailsignaturebuilder.com>',
+        to:      [ email ],            // ← use email here
         subject: 'Your Custom Gmail Signature',
-        html,
+        html:     html
       }),
     });
 
     if (!resp.ok) {
-      const text = await resp.text();
+      const text = await resp.text(); 
       console.error('Resend error:', resp.status, text);
       return { statusCode: resp.status, body: text };
     }
 
     return { statusCode: 200, body: 'Email sent' };
-  } catch (err) {
+  }
+  catch (err) {
     console.error('Function error:', err);
-    return { statusCode: 500, body: 'Internal server error' };
+    return { statusCode: 500, body: err.message };
   }
 };
