@@ -1,3 +1,6 @@
+// netlify/functions/index.js
+const fetch = require('node-fetch');
+
 exports.handler = async function(event, context) {
   try {
     const { to, html } = JSON.parse(event.body);
@@ -5,7 +8,7 @@ exports.handler = async function(event, context) {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": "Bearer YOUR_RESEND_API_KEY",
+        "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -17,10 +20,10 @@ exports.handler = async function(event, context) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.text(); // safer than .json in error
       return {
         statusCode: response.status,
-        body: JSON.stringify({ error: errorData })
+        body: errorData
       };
     }
 
