@@ -1,6 +1,9 @@
 [build]
-  # This explicitly tells Netlify where your serverless functions are.
-  functions = "netlify/functions"
-  
-  # This explicitly tells Netlify that the root directory contains your site.
+  # This tells Netlify where your main website files are.
   publish = "/"
+
+[functions]
+  # This tells Netlify where your function files are.
+  directory = "netlify/functions/"
+  # This explicitly tells Netlify to use the correct bundler for Node.js.
+  node_bundler = "esbuild"
