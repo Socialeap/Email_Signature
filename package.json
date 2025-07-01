@@ -2,6 +2,7 @@
   "name": "signature-webhook",
   "version": "1.0.0",
   "dependencies": {
-    "@netlify/blobs": "^6.4.0"
+    "@netlify/blobs": "^6.4.0",
+    "node-fetch": "^2.6.7"
   }
 }
