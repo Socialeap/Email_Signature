@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Your Signature is Ready!</title>
+  <title>Your Signature Is Ready!</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -16,18 +16,19 @@
 
   <div id="main-container" class="w-full max-w-3xl bg-white p-8 rounded-xl shadow-lg text-center">
 
-    <!-- Loading State -->
+    <!-- Loading -->
     <div id="loading-state">
       <h1 class="text-2xl font-bold text-gray-800">Finalizing Your Signature...</h1>
-      <p class="text-gray-600 mt-2">Please wait a moment while we prepare your code. This can take up to 20 seconds.</p>
+      <p class="text-gray-600 mt-2">Please wait while we prepare your signature.</p>
       <div class="spinner mt-6 border-4 border-gray-300 border-t-4 border-t-indigo-600 rounded-full w-12 h-12 animate-spin mx-auto"></div>
     </div>
 
-    <!-- Success State -->
+    <!-- Success -->
     <div id="success-state" class="hidden">
-      <h1 class="text-3xl font-bold text-green-600">Thank You For Your Purchase!</h1>
-      <p class="text-gray-700 mt-2">Your custom email signature is ready.</p>
+      <h1 class="text-3xl font-bold text-green-600">Thank You!</h1>
+      <p class="text-gray-700 mt-2">Your email signature is ready below.</p>
 
+      <!-- Live Preview -->
       <div class="my-6">
         <h2 class="text-xl font-semibold text-gray-800">Live Preview</h2>
         <div id="business-card-container" class="bg-gray-50 p-6 rounded-lg shadow-inner mt-2 inline-block">
@@ -35,41 +36,35 @@
         </div>
       </div>
 
-      <div class="text-left">
-        <h2 class="text-xl font-semibold text-gray-800">Your HTML Code</h2>
-        <p class="text-sm text-gray-600 mt-1">Click the button below to copy the code to your clipboard. Then paste it into your Gmail signature editor.</p>
-        <!-- We keep textarea for reference, but copy uses preview-pane -->
-        <textarea id="html-code-output" readonly class="w-full h-40 bg-gray-900 text-white font-mono text-sm p-4 rounded-lg mt-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-        <button id="copy-btn" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-all">
-          Copy Signature HTML
+      <!-- Copy Button -->
+      <div class="my-4">
+        <button id="copy-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-all">
+          Copy Signature
         </button>
-        <p id="copy-success-msg" class="text-center text-green-600 font-semibold mt-2 opacity-0 transition-opacity">Copied!</p>
+        <p id="copy-success-msg" class="text-green-600 font-semibold mt-2 opacity-0 transition-opacity">Copied!</p>
       </div>
     </div>
 
-    <!-- Error State -->
+    <!-- Error -->
     <div id="error-state" class="hidden">
-      <h1 class="text-2xl font-bold text-red-600">An Error Occurred</h1>
-      <p class="text-gray-600 mt-2">We were unable to load your signature. Please check the link or contact support.</p>
+      <h1 class="text-2xl font-bold text-red-600">Error</h1>
+      <p class="text-gray-600 mt-2">Unable to load your signature. Please check the link or contact support.</p>
     </div>
 
   </div>
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // Elements
     const loadingState   = document.getElementById('loading-state');
     const successState   = document.getElementById('success-state');
     const errorState     = document.getElementById('error-state');
     const previewPane    = document.getElementById('preview-pane');
-    const htmlCodeOutput = document.getElementById('html-code-output');
     const copyBtn        = document.getElementById('copy-btn');
     const copySuccessMsg = document.getElementById('copy-success-msg');
 
-    // Read the base64-encoded data from URL
+    // Get the Base64 data
     const params      = new URLSearchParams(window.location.search);
     const encodedData = params.get('data');
-
     if (!encodedData) {
       loadingState.style.display = 'none';
       errorState.style.display   = 'block';
@@ -77,30 +72,26 @@
     }
 
     try {
-      // Decode & parse
-      const parsed = JSON.parse(atob(encodedData));
-      const info    = parsed.info    || {};
-      const buttons = parsed.buttons || [];
-      const socials = parsed.socials || [];
+      const { info = {}, buttons = [], socials = [] } = JSON.parse(atob(encodedData));
 
-      // Helper links
+      // Build phone & website links
       const phoneLink   = (info.phone || '').replace(/[^\d]/g, '');
       const websiteLink = info.website && info.website.startsWith('http')
                         ? info.website
                         : `https://${info.website || ''}`;
 
-      // Build buttons HTML
+      // Buttons HTML
       let buttonsHtml = '';
       if (buttons.length) {
         buttonsHtml = '<tr><td colspan="2" style="padding-top:12px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
-        buttons.forEach(btn => {
+        buttons.forEach(b => {
           buttonsHtml += `
             <td style="padding-right:8px;">
-              <a href="${btn.url}" target="_blank"
-                 style="display:inline-block;padding:6px 12px;background-color:${btn.color};
+              <a href="${b.url}" target="_blank"
+                 style="display:inline-block;padding:6px 12px;background-color:${b.color};
                         color:#fff;text-decoration:none;border-radius:18px;
                         font-weight:bold;font-size:12px;text-align:center;">
-                ${btn.label}
+                ${b.label}
               </a>
             </td>`;
         });
@@ -118,7 +109,7 @@
         Bluesky:     'https://seeklogo.com/images/B/bluesky-logo-1913610691-seeklogo.com.png'
       };
 
-      // Build socials HTML
+      // Socials HTML
       let socialsHtml = '';
       if (socials.length) {
         socialsHtml = '<tr><td colspan="2" style="padding-top:10px;"><table cellpadding="0" cellspacing="0" border="0"><tr>';
@@ -129,7 +120,7 @@
               <td style="padding-right:8px;">
                 <a href="${s.url}" target="_blank">
                   <img src="${icon}" width="24" height="24" alt="${s.network}"
-                       style="border:0;border-radius:6px;display:block;">
+                       style="border:0;border-radius:6px;display:block;"/>
                 </a>
               </td>`;
           }
@@ -137,22 +128,37 @@
         socialsHtml += '</tr></table></td></tr>';
       }
 
-      // Final signature HTML
+      // Final table
       const signatureHtml = `
-        <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;color:#333;width:100%;">
+        <table cellpadding="0" cellspacing="0" border="0"
+               style="font-family:Arial,sans-serif;color:#333;width:100%;">
           <tr>
             <td style="padding-right:16px;vertical-align:top;width:90px;height:90px;">
               <img src="${info.image_url}" alt="Profile" width="90" height="90"
-                   style="border-radius:50%;display:block;${info.image_style || ''}">
+                   style="border-radius:50%;display:block;${info.image_style||''}"/>
             </td>
             <td style="vertical-align:top;padding-top:5px;">
-              <div style="font-size:18px;font-weight:bold;color:#195070;line-height:1.2;">${info.name}</div>
+              <div style="font-size:18px;font-weight:bold;color:#195070;line-height:1.2;">
+                ${info.name||''}
+              </div>
               <div style="font-size:14px;color:#555;line-height:1.3;margin-top:2px;">
-                ${info.title || ''}${info.company ? ' | ' + info.company : ''}
+                ${info.title||''}${info.company? ' | '+info.company: ''}
               </div>
               <div style="margin-top:8px;line-height:1.4;">
-                ${info.phone ? `<div style="font-size:13px;"><a href="tel:${phoneLink}" style="color:#195070;text-decoration:none;">${info.phone}</a></div>` : ''}
-                ${info.website ? `<div style="font-size:13px;"><a href="${websiteLink}" target="_blank" style="color:#195070;text-decoration:none;">${info.website}</a></div>` : ''}
+                ${info.phone
+                  ? `<div style="font-size:13px;">
+                       <a href="tel:${phoneLink}" style="color:#195070;text-decoration:none;">
+                         ${info.phone}
+                       </a>
+                     </div>`
+                  : ''}
+                ${info.website
+                  ? `<div style="font-size:13px;">
+                       <a href="${websiteLink}" target="_blank" style="color:#195070;text-decoration:none;">
+                         ${info.website}
+                       </a>
+                     </div>`
+                  : ''}
               </div>
             </td>
           </tr>
@@ -160,13 +166,12 @@
           ${socialsHtml}
         </table>`;
 
-      // Render and show
-      previewPane.innerHTML    = signatureHtml;
-      htmlCodeOutput.value     = signatureHtml.trim();
+      // Render & show
+      previewPane.innerHTML      = signatureHtml;
       loadingState.style.display = 'none';
       successState.style.display = 'block';
 
-      // Copy rendered HTML on click
+      // Copy rendered HTML
       copyBtn.addEventListener('click', () => {
         const htmlToCopy = previewPane.innerHTML.trim();
         navigator.clipboard.writeText(htmlToCopy)
@@ -176,15 +181,15 @@
             copyBtn.classList.replace('bg-indigo-600','bg-green-600');
             setTimeout(() => {
               copySuccessMsg.classList.add('opacity-0');
-              copyBtn.textContent = 'Copy Signature HTML';
+              copyBtn.textContent = 'Copy Signature';
               copyBtn.classList.replace('bg-green-600','bg-indigo-600');
-            }, 2500);
+            }, 2000);
           })
           .catch(err => console.error('Copy failed', err));
       });
 
     } catch (err) {
-      console.error('Error rendering signature:', err);
+      console.error(err);
       loadingState.style.display = 'none';
       errorState.style.display   = 'block';
     }
