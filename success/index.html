@@ -165,19 +165,14 @@
     // 3. Send via Resend on click
     sendBtn.addEventListener('click', () => {
       sendBtn.disabled = true;
-      fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer re_dx2UKkgq_3F75UZeJrXbgjx9XQK7CV6Zy'
-        },
-        body: JSON.stringify({
-          from: 'YOUR_VERIFIED_SENDER',
-          to: [ userEmail ],
-          subject: 'Your Custom Email Signature',
-          html: signatureHtml
-        })
-      })
+      fetch('/api/sendSignatureEmail', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: userEmail,
+    html:  signatureHtml
+  })
+})
       .then(res => {
         if (!res.ok) throw new Error(res.statusText);
         sendMsg.classList.remove('opacity-0');
