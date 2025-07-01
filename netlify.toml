@@ -1,20 +1,22 @@
-# Netlify configuration file
-
 [build]
-  # Directory where Netlify publishes your site
-  publish = "."
-  # Directory where Netlify looks for Functions
+  publish   = "."
   functions = "netlify/functions"
 
-# Redirect /success to the success page with your signature builder
+# 1️⃣ Proxy /api/* → your Netlify functions
 [[redirects]]
-  from   = "/success"
-  to     = "/success/index.html"
-  status = 200
-  force  = true
+  from      = "/api/*"
+  to        = "/.netlify/functions/:splat"
+  status    = 200
 
-# SPA fallback for all other routes
+# 2️⃣ Serve your success page
 [[redirects]]
-  from   = "/*"
-  to     = "/index.html"
-  status = 200
+  from      = "/success"
+  to        = "/success/index.html"
+  status    = 200
+  force     = true
+
+# 3️⃣ SPA fallback for everything else
+[[redirects]]
+  from      = "/*"
+  to        = "/index.html"
+  status    = 200
