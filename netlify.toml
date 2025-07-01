@@ -1,16 +1,20 @@
-[build]
-  # your publish dir, adjust if needed:
-  publish = "."
+# Netlify configuration file
 
+[build]
+  # Directory where Netlify publishes your site
+  publish = "."
+  # Directory where Netlify looks for Functions
+  functions = "netlify/functions"
+
+# Redirect /success to the success page with your signature builder
 [[redirects]]
-  # 1️⃣ First match /success (with or without data query)
   from   = "/success"
   to     = "/success/index.html"
   status = 200
   force  = true
 
+# SPA fallback for all other routes
 [[redirects]]
-  # 2️⃣ Then your SPA fallback
   from   = "/*"
   to     = "/index.html"
   status = 200
