@@ -1,9 +1,7 @@
 [build]
-  # This tells Netlify where your main website files are.
-  publish = "/"
+  publish = "."  # or "dist" if you're using a subfolder for HTML
+  functions = "netlify/functions"
 
 [functions]
-  # This tells Netlify where your function files are.
-  directory = "netlify/functions/"
-  # This explicitly tells Netlify to use the correct bundler for Node.js.
+  directory = "netlify/functions"
   node_bundler = "esbuild"
