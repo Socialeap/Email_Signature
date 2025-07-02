@@ -1,19 +1,5 @@
-[build]
-  publish   = "."
-  functions = "netlify/functions"
-
 [[redirects]]
   from   = "/success"
-  to     = "/success/index.html"
+  to     = "/final.html" 
   status = 200
   force  = true
-
-[[redirects]]
-  from   = "/*"
-  to     = "/index.html"
-  status = 200
-
-# Install per-function dependencies from each function’s package.json
-[[plugins]]
-  package = "@netlify/plugin-functions-install-core"
-# Force new deploy on [6-1-2025 11:44pm]
