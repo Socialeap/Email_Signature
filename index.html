@@ -36,9 +36,7 @@
   </header>
 
   <main class="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-7xl mx-auto px-4 main-container">
-    <!-- CONTROLS CARD -->
     <div class="bg-white rounded-xl shadow-lg flex flex-col h-full">
-      <!-- Tabs -->
       <div class="flex-shrink-0 border-b border-gray-200">
         <nav class="flex space-x-2 sm:space-x-4 px-4" aria-label="Tabs">
           <button class="tab-btn active" data-tab="info">Info & Image</button>
@@ -47,7 +45,6 @@
         </nav>
       </div>
       <div class="p-6 flex-grow custom-scrollbar overflow-y-auto">
-        <!-- Info & Image -->
         <div id="tab-info" class="tab-content space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -92,7 +89,6 @@
           </div>
         </div>
 
-        <!-- Buttons -->
         <div id="tab-buttons" class="tab-content hidden space-y-4">
           <div id="button-carousel" class="space-y-3">
             <div class="flex justify-between items-center bg-gray-50 p-2 rounded">
@@ -110,7 +106,6 @@
           </button>
         </div>
 
-        <!-- Socials -->
         <div id="tab-socials" class="tab-content hidden space-y-4">
           <div id="social-carousel" class="space-y-3">
             <div class="flex justify-between items-center bg-gray-50 p-2 rounded">
@@ -129,7 +124,6 @@
         </div>
       </div>
 
-      <!-- Finalize & Purchase -->
       <div class="p-6 border-t">
         <button id="purchase-btn"
                 class="w-full bg-green-600 text-white py-3 rounded font-bold">
@@ -138,7 +132,6 @@
       </div>
     </div>
 
-    <!-- PREVIEW CARD -->
     <div class="bg-white p-4 rounded-xl shadow-lg flex flex-col">
       <h3 class="text-xl font-semibold text-center mb-4">Live Preview</h3>
       <div class="flex-grow bg-gray-50 rounded-xl flex items-start justify-center p-6">
@@ -273,7 +266,7 @@
                 ${vals.website
                   ? `<div style="font-size:13px;">
                        <a href="${websiteLink}"
-                          style="color:#195070;text-decoration:none;">
+                          style="color:#195070;text-decoration:none;" target="_blank">
                          ${vals.website}
                        </a>
                      </div>`
@@ -301,17 +294,28 @@
       });
     });
 
-    // Purchase handler: collect, encode, redirect
+    // ==================================================================
+    // This function is the only part that needs to be changed.
+    // ==================================================================
     function handlePurchaseClick() {
+      // 1. Create a unique session ID
+      const sessionId = `sig_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+      // 2. Save it to the browser's local storage
+      localStorage.setItem('signatureSessionId', sessionId);
+
       const payload = {
         info: {},
         buttons: state.buttons,
         socials: state.socials
       };
       elements.inputs.forEach(i => payload.info[i.id] = i.value);
+      
       const encoded = btoa(JSON.stringify(payload));
       const jotformURL = 'https://form.jotform.com/251807491733057';
-      window.location.href = `${jotformURL}?data=${encoded}`;
+      
+      // 3. Pass the new sessionId to the Jotform URL along with the data
+      window.location.href = `${jotformURL}?data=${encoded}&sessionId=${sessionId}`;
     }
 
     // Wire up events
