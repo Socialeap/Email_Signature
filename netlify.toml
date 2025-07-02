@@ -16,3 +16,4 @@
 # Install per-function dependencies from each function’s package.json
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
+# Force new deploy on [6-1-2025 11:44pm]
