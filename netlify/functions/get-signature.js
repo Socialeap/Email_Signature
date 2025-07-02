@@ -8,10 +8,8 @@ export async function handler(event) {
       return { statusCode: 400, body: "Missing submission ID." };
     }
 
-    const signatureStore = getStore("signatures", {
-      siteID: process.env.NETLIFY_SITE_ID,
-      token: process.env.NETLIFY_AUTH_TOKEN
-    });
+    // Corrected line: Remove the second argument from getStore
+    const signatureStore = getStore("signatures");
 
     const signatureHtml = await signatureStore.get(submissionID);
 
