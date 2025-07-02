@@ -1,10 +1,9 @@
 import { getStore } from "@netlify/blobs";
 
-// IMPORTANT: You must have a function that generates the final signature HTML.
-// Place your full HTML generation logic from your original success.html here.
+// Your existing generateFinalSignature function remains here.
+// Make sure it is complete and correct.
 function generateFinalSignature(signatureData) {
-  // This is a placeholder for your existing, detailed HTML generation logic.
-  // Ensure it's identical to the logic you used on your app's main page.
+  // ... your full HTML generation logic ...
   const { info = {}, buttons = [], socials = [] } = signatureData;
   const phoneLink = (info.phone || "").replace(/[^\d]/g, "");
   const websiteLink = info.website?.startsWith("http")
@@ -20,7 +19,7 @@ function generateFinalSignature(signatureData) {
     btns += "</tr></table></td></tr>";
   }
   
-  // Add your socials (socs) generation logic here...
+  // Your socials generation logic should also be here...
 
   return `
     <table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;color:#333;width:100%;text-align:left;">
@@ -38,9 +37,11 @@ function generateFinalSignature(signatureData) {
         </td>
       </tr>
       ${btns}
-    </table>`.trim(); // Add ${socs} when ready
+    </table>`.trim();
 }
 
+
+// Replace your existing handler function with this one.
 export async function handler(event) {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
@@ -48,25 +49,24 @@ export async function handler(event) {
 
   try {
     const formData = new URLSearchParams(event.body);
-    // Jotform often passes the encoded data in a field. You may need to inspect your webhook
-    // payload to find the exact field name (e.g., 'data', 'rawRequest', etc.).
-    const encodedData = formData.get("data"); 
-    const submissionID = formData.get("submissionID");
+    const encodedData = formData.get("data");
 
-    if (!encodedData || !submissionID) {
-      return { statusCode: 400, body: "Missing data or submissionID." };
+    // 1. Get the sessionId from the form data
+    const sessionId = formData.get("sessionId");
+
+    // 2. Check for it
+    if (!encodedData || !sessionId) {
+      return { statusCode: 400, body: "Missing data or sessionId." };
     }
-    
-    // Decode the data and generate the final signature HTML
+
     const decodedJsonString = Buffer.from(encodedData, "base64").toString("utf8");
     const signatureData = JSON.parse(decodedJsonString);
     const finalHtml = generateFinalSignature(signatureData);
 
-    // Get the blob store named "signatures"
     const signatureStore = getStore("signatures");
-    
-    // Save the generated HTML to the store, using the submission ID as the unique key
-    await signatureStore.set(submissionID, finalHtml);
+
+    // 3. Use the sessionId as the key to save the signature
+    await signatureStore.set(sessionId, finalHtml);
 
     return {
       statusCode: 200,
