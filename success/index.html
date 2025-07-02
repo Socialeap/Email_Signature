@@ -60,33 +60,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   const copyBtn = document.getElementById('copy-btn');
   const copyMsg = document.getElementById('copy-msg');
 
-  const params = new URLSearchParams(window.location.search);
-  const submissionID = params.get('id');
+  // 1. Get the session ID from local storage, NOT the URL
+  const sessionId = localStorage.getItem('signatureSessionId');
 
-  if (!submissionID) {
+  if (!sessionId) {
     loading.style.display = 'none';
     error.style.display   = 'block';
+    // Add a more specific error message
+    error.querySelector('p').textContent = "Could not find a valid session. Please start the process again.";
     return;
   }
 
   let signatureHtml = '';
 
   try {
-    // Fetch the signature HTML from our Netlify function using the ID from the URL
-    const response = await fetch(`/.netlify/functions/get-signature?id=${submissionID}`);
-    if (!response.ok) {
-      throw new Error(`Server responded with status: ${response.status}`);
-    }
+    // 2. Fetch the signature using the session ID
+    // Your get-signature function already uses a query param named 'id', so this works perfectly.
+    const response = await fetch(`/.netlify/functions/get-signature?id=${sessionId}`);
+    if (!response.ok) throw new Error(`Server responded with status: ${response.status}`);
     
     signatureHtml = await response.text();
-    if (!signatureHtml) {
-      throw new Error('Signature content is empty.');
-    }
+    if (!signatureHtml) throw new Error('Signature content is empty.');
 
-    // Display the fetched signature and switch to the 'ready' view
     preview.innerHTML = signatureHtml;
     loading.style.display = 'none';
     ready.style.display   = 'block';
+    
+    // 3. Clean up the local storage
+    localStorage.removeItem('signatureSessionId');
 
   } catch (err) {
     console.error('Failed to load signature:', err);
@@ -95,12 +96,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Set up the copy button to copy the RAW signatureHtml string to the clipboard
+  // Copy button handler (no changes needed here)
   copyBtn.addEventListener('click', () => {
     navigator.clipboard.writeText(signatureHtml).then(() => {
       copyBtn.textContent = 'Copied!';
       copyMsg.classList.remove('opacity-0');
-      
       setTimeout(() => {
         copyBtn.textContent = 'Copy Signature to Clipboard';
         copyMsg.classList.add('opacity-0');
@@ -112,6 +112,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 </script>
-
 </body>
 </html>
